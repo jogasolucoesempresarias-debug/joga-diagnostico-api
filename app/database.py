@@ -26,10 +26,23 @@ def get_db():
         db.close()
 
 
-def init_db():
-    """Cria as tabelas registradas em Base.metadata se ainda não existirem."""
+def init_db(retries: int = 15, delay: int = 3):
+    """Cria as tabelas se não existirem — com retry, pra sobreviver ao banco
+    ficar pronto um pouco depois do backend subir (ordem de deploy)."""
+    import logging
+    import time
+    logger = logging.getLogger(__name__)
     from . import models  # noqa: F401 — registra os models em Base
-    Base.metadata.create_all(bind=engine)
+
+    for tentativa in range(1, retries + 1):
+        try:
+            Base.metadata.create_all(bind=engine)
+            logger.info("init_db: tabelas garantidas.")
+            return
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"init_db tentativa {tentativa}/{retries} falhou: {e}")
+            time.sleep(delay)
+    logger.error("init_db: não consegui criar as tabelas após %s tentativas.", retries)
 
 
 def migrate_db():
