@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Diagnóstico JOGA — Admin</title>
+<style>
+  :root{
+    --ink:#0e1116; --surface:#161b22; --surface2:#1b2027; --line:#232a33;
+    --amber:#f4a52a; --cream:#f5f2ec; --mut:#8b94a3; --teal:#39b3a6;
+    --red:#f77; --green:#5cd08a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--cream);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+  a{color:var(--amber)}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px}
+  header.top{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding:16px 0;margin-bottom:20px}
+  .brand{font-weight:700;letter-spacing:.3px}
+  .brand b{color:var(--amber)}
+  .muted{color:var(--mut)}
+  .btn{border:1px solid var(--line);background:var(--surface);color:var(--cream);border-radius:999px;padding:8px 16px;font-weight:600;cursor:pointer}
+  .btn.amber{background:var(--amber);color:#13171e;border-color:var(--amber)}
+  .btn:hover{border-color:var(--mut)}
+  input,select{background:var(--surface);border:1px solid var(--line);color:var(--cream);border-radius:8px;padding:9px 11px;font-size:14px;outline:none}
+  input:focus,select:focus{border-color:var(--amber)}
+
+  /* login */
+  #login{max-width:360px;margin:12vh auto;text-align:center}
+  #login h1{font-size:22px}
+  #login input{width:100%;margin:14px 0;text-align:center}
+
+  /* stats */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .stat .n{font-size:26px;font-weight:700}
+  .stat .l{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  .stat.hot .n{color:var(--amber)}
+
+  /* filters */
+  .filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+  .filters input[type=text]{min-width:220px;flex:1}
+
+  /* table */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line)}
+  th{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:var(--surface2)}
+  .pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:700;border:1px solid transparent}
+  .u-pra_ontem{color:var(--red);border-color:#f7777740;background:#f7777714}
+  .u-3_meses{color:var(--amber);border-color:#f4a52a40;background:#f4a52a14}
+  .u-pesquisando{color:var(--mut);border-color:var(--line);background:#8b94a314}
+  .dots{display:flex;gap:4px}
+  .dot{width:10px;height:10px;border-radius:3px}
+  .n-Crítico{background:var(--red)} .n-Atenção{background:var(--amber)}
+  .n-Bom{background:var(--teal)} .n-Maduro{background:var(--green)}
+  .chk{color:var(--teal);font-weight:700}
+  .pager{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;color:var(--mut);font-size:13px}
+
+  /* detail drawer */
+  .overlay{position:fixed;inset:0;background:#000a;display:none;align-items:stretch;justify-content:flex-end;z-index:50}
+  .overlay.on{display:flex}
+  .drawer{width:min(720px,100%);background:var(--ink);border-left:1px solid var(--line);overflow-y:auto;padding:24px}
+  .drawer h2{margin:0 0 2px}
+  .badge-row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 18px}
+  .sec{margin:18px 0}
+  .sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--amber);margin:0 0 8px}
+  .placar-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+  .placar-item{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+  .opp{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;font-size:14px}
+  .report{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .report h1{font-size:20px;margin:.2em 0} .report h2,.report h3{font-size:15px;color:var(--cream);margin:1em 0 .3em}
+  .report p{margin:.5em 0;color:#dfe3ea} .report li{color:#dfe3ea}
+  pre.brief{background:#0b0e12;border:1px solid var(--line);border-radius:12px;padding:14px;white-space:pre-wrap;font:13px/1.5 ui-monospace,Consolas,monospace;color:#cdd3dc}
+  .achados li{margin:4px 0}
+  .close{position:sticky;top:0;float:right;cursor:pointer;color:var(--mut);font-size:22px}
+  .empty{padding:40px;text-align:center;color:var(--mut)}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="brand" style="font-size:20px"><b>JOGA</b> · Diagnóstico</div>
+  <p class="muted">Painel de leads — acesso restrito.</p>
+  <input id="tok" type="password" placeholder="Token de acesso" onkeydown="if(event.key==='Enter')entrar()" />
+  <button class="btn amber" style="width:100%" onclick="entrar()">Entrar</button>
+  <p id="loginErr" class="muted" style="color:var(--red)"></p>
+</div>
+
+<div id="app" style="display:none">
+  <div class="wrap">
+    <header class="top">
+      <div class="brand"><b>JOGA</b> · Diagnóstico <span class="muted">— Admin</span></div>
+      <button class="btn" onclick="sair()">Sair</button>
+    </header>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="filters">
+      <input type="text" id="q" placeholder="Buscar por nome ou empresa…" oninput="debouncedLoad()" />
+      <select id="setor" onchange="load()">
+        <option value="">Todos os setores</option>
+        <option value="atacado">Atacado</option><option value="varejo">Varejo/Super</option>
+        <option value="industria">Indústria</option><option value="logistica">Logística</option>
+        <option value="servicos">Serviços</option><option value="outro">Outro</option>
+      </select>
+      <select id="urgencia" onchange="load()">
+        <option value="">Toda urgência</option>
+        <option value="pra_ontem">Pra ontem</option><option value="3_meses">3 meses</option>
+        <option value="pesquisando">Pesquisando</option>
+      </select>
+      <select id="planilha" onchange="load()">
+        <option value="">Com/sem planilha</option>
+        <option value="true">Só com planilha</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead><tr>
+          <th>Quando</th><th>Empresa</th><th>Contato</th><th>Setor</th>
+          <th>Porte</th><th>Urgência</th><th>Placar</th><th>Planilha</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="pager">
+        <span id="pinfo"></span>
+        <span>
+          <button class="btn" id="prev" onclick="page(-1)">‹ Anterior</button>
+          <button class="btn" id="next" onclick="page(1)">Próxima ›</button>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="if(event.target.id==='overlay')fecharDet()">
+  <div class="drawer" id="drawer"></div>
+</div>
+
+<script>
+const LBL = {
+  setor:{atacado:"Atacado distribuidor",varejo:"Varejo/supermercado",industria:"Indústria",logistica:"Logística/transporte",servicos:"Serviços",outro:"Outro"},
+  fat:{ate100k:"até R$100 mil",'100k_500k':"R$100–500 mil",'500k_2mi':"R$500 mil–2 mi",'2mi_10mi':"R$2–10 mi",mais10mi:"+R$10 mi"},
+  urg:{pra_ontem:"Pra ontem",'3_meses':"3 meses",pesquisando:"Pesquisando"},
+  erp:{winthor:"Winthor",totvs:"TOTVS",bling:"Bling/Tiny",nenhum:"Sem sistema",outro:"Outro"},
+};
+const AREAS = ["Dados","Comercial","Carteira","Estoque"];
+let state = {offset:0, limit:25, total:0};
+
+function tok(){ return sessionStorage.getItem("joga_admin_tok") || ""; }
+function entrar(){
+  const t = document.getElementById("tok").value.trim();
+  sessionStorage.setItem("joga_admin_tok", t);
+  load(true);
+}
+function sair(){ sessionStorage.removeItem("joga_admin_tok"); location.reload(); }
+
+let deb; function debouncedLoad(){ clearTimeout(deb); deb=setTimeout(()=>{state.offset=0;load();},300); }
+function page(d){ state.offset=Math.max(0,state.offset+d*state.limit); load(); }
+
+async function load(first){
+  const p = new URLSearchParams({token:tok(), limit:state.limit, offset:state.offset});
+  const q=val("q"), s=val("setor"), u=val("urgencia"), pl=val("planilha");
+  if(q)p.set("q",q); if(s)p.set("setor",s); if(u)p.set("urgencia",u); if(pl)p.set("tem_planilha",pl);
+  let r;
+  try{ r = await fetch("/api/diagnostico/admin/api/leads?"+p.toString()); }catch(e){ return; }
+  if(r.status===401){ if(first){document.getElementById("loginErr").textContent="Token inválido.";} else sair(); return; }
+  const d = await r.json();
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
+  renderStats(d.stats); renderRows(d.leads);
+  state.total=d.total;
+  const ini = d.total? state.offset+1 : 0, fim = Math.min(state.offset+state.limit, d.total);
+  document.getElementById("pinfo").textContent = `${ini}–${fim} de ${d.total}`;
+  document.getElementById("prev").disabled = state.offset<=0;
+  document.getElementById("next").disabled = fim>=d.total;
+}
+function val(id){ return document.getElementById(id).value; }
+
+function renderStats(s){
+  const setores = Object.entries(s.por_setor||{}).map(([k,v])=>`${LBL.setor[k]||k}: ${v}`).join(" · ");
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><div class="n">${s.total}</div><div class="l">Leads no total</div></div>
+    <div class="stat hot"><div class="n">${s.pra_ontem}</div><div class="l">Urgência "pra ontem"</div></div>
+    <div class="stat"><div class="n">${s.com_planilha}</div><div class="l">Subiram planilha</div></div>
+    <div class="stat" style="grid-column:span 2"><div class="l">Por setor</div><div style="margin-top:6px;font-size:13px" class="muted">${setores||"—"}</div></div>`;
+}
+
+function dots(placar){
+  return `<div class="dots" title="${AREAS.map(a=>placar[a]?a+': '+placar[a]:'').filter(Boolean).join(' | ')}">` +
+    AREAS.map(a=> placar[a]?`<span class="dot n-${placar[a]}"></span>`:`<span class="dot" style="background:#2a3038"></span>`).join("") + `</div>`;
+}
+function fmtData(iso){ if(!iso)return"—"; const d=new Date(iso); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+" "+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+
+function renderRows(leads){
+  const tb=document.getElementById("rows");
+  if(!leads.length){ tb.innerHTML=`<tr><td colspan="8"><div class="empty">Nenhum lead encontrado.</div></td></tr>`; return; }
+  tb.innerHTML = leads.map(l=>`
+    <tr onclick="abrir(${l.id})">
+      <td class="muted">${fmtData(l.criado_em)}</td>
+      <td><b>${esc(l.empresa||"—")}</b></td>
+      <td>${esc(l.nome||"—")}</td>
+      <td>${LBL.setor[l.setor]||l.setor||"—"}</td>
+      <td class="muted">${LBL.fat[l.faturamento]||"—"}</td>
+      <td>${l.urgencia?`<span class="pill u-${l.urgencia}">${LBL.urg[l.urgencia]}</span>`:"—"}</td>
+      <td>${dots(l.placar||{})}</td>
+      <td>${l.tem_planilha?'<span class="chk">✓</span>':'<span class="muted">—</span>'}</td>
+    </tr>`).join("");
+}
+
+async function abrir(id){
+  const r = await fetch(`/api/diagnostico/admin/api/leads/${id}?token=${encodeURIComponent(tok())}`);
+  if(!r.ok) return;
+  const d = await r.json();
+  const c=d.contato;
+  const placar = AREAS.filter(a=>d.placar[a]).map(a=>`<div class="placar-item"><span>${a}</span><span class="pill n-${d.placar[a]}" style="color:#0e1116">${d.placar[a]}</span></div>`).join("");
+  const opps = (d.oportunidades||[]).map(t=>`<div class="opp">› ${esc(t)}</div>`).join("");
+  const ach = d.achados&&d.achados.frases ? `<div class="sec"><h3>Achados da planilha</h3><ul class="achados">${d.achados.frases.map(f=>`<li>${esc(f)}</li>`).join("")}</ul></div>` : "";
+  document.getElementById("drawer").innerHTML = `
+    <span class="close" onclick="fecharDet()">✕</span>
+    <h2>${esc(c.empresa||"")}</h2>
+    <div class="muted">${esc(c.nome||"")} — ${esc(c.cargo||"—")}</div>
+    <div class="badge-row">
+      <span class="pill" style="border-color:var(--line)">${LBL.setor[c.setor]||c.setor||"—"}</span>
+      <span class="pill" style="border-color:var(--line)">${LBL.fat[c.faturamento]||"porte —"}</span>
+      <span class="pill" style="border-color:var(--line)">ERP: ${LBL.erp[c.erp]||c.erp||"—"}</span>
+      ${c.urgencia?`<span class="pill u-${c.urgencia}">${LBL.urg[c.urgencia]}</span>`:""}
+    </div>
+    <div class="sec"><h3>Contato</h3>
+      <div>📱 ${esc(c.whatsapp||"—")} &nbsp; ✉️ ${esc(c.email||"—")}</div>
+      ${c.desafio?`<div style="margin-top:8px" class="muted">Dor declarada: “${esc(c.desafio)}”</div>`:""}
+    </div>
+    <div class="sec"><h3>Placar de maturidade</h3><div class="placar-grid">${placar||'<span class="muted">—</span>'}</div></div>
+    <div class="sec"><h3>Oportunidades</h3>${opps||'<span class="muted">—</span>'}</div>
+    ${ach}
+    <div class="sec"><h3>Relatório completo (IA)</h3><div class="report">${md(d.relatorio||"—")}</div></div>
+    <div class="sec"><h3>Pré-brief pro João</h3><pre class="brief">${esc(d.prebrief||"—")}</pre></div>
+  `;
+  document.getElementById("overlay").classList.add("on");
+}
+function fecharDet(){ document.getElementById("overlay").classList.remove("on"); }
+
+function esc(s){ return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function md(t){
+  const lines = esc(t).split("\n"); let out=[], inList=false;
+  for(let ln of lines){
+    let m = ln.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>");
+    if(/^### /.test(ln)){ out.push(`<h3>${m.slice(4)}</h3>`); }
+    else if(/^## /.test(ln)){ out.push(`<h2>${m.slice(3)}</h2>`); }
+    else if(/^# /.test(ln)){ out.push(`<h1>${m.slice(2)}</h1>`); }
+    else if(/^- /.test(ln)){ if(!inList){out.push("<ul>");inList=true;} out.push(`<li>${m.slice(2)}</li>`); continue; }
+    else if(/^---+\s*$/.test(ln)){ out.push("<hr style='border:none;border-top:1px solid var(--line)'>"); }
+    else if(ln.trim()===""){ }
+    else { out.push(`<p>${m}</p>`); }
+    if(inList && !/^- /.test(ln)){ out.splice(out.length-1,0,"</ul>"); inList=false; }
+  }
+  if(inList)out.push("</ul>");
+  return out.join("");
+}
+
+// auto-login se já tiver token salvo
+if(tok()) load(true);
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+.DS_Store
+
+# artefatos de teste local
+uvicorn.log
+_payload_teste.json
+_*.txt
+resp.json
+server.log
+static.log
+_*.json
+
+# compose de produção tem segredos inline — NÃO versionar (aplicar via Portainer)
+docker-compose.prod.yml
