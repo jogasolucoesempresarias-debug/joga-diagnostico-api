@@ -56,9 +56,9 @@ TITULOS = {
 # Solução âncora sugerida por área (para o pré-brief §7)
 ANCORAS = {
     AREA_DADOS: "Painel de Indicadores (BI)",
-    AREA_COMERCIAL: "Gestão Comercial / BI de Vendas",
+    AREA_COMERCIAL: "Gestão de Vendas",
     AREA_CARTEIRA: "Gestão de Carteira de Clientes",
-    AREA_ESTOQUE: "Gestão de Estoque e Compras",
+    AREA_ESTOQUE: "Gestão de Estoque",
 }
 
 
