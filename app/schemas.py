@@ -7,8 +7,8 @@ usa exatamente esses códigos. Códigos desconhecidos/ausentes viram 0 ponto.
 
 Perguntas (spec §4):
   q1 setor        : atacado | varejo | industria | logistica | servicos | outro
-  q2 faturamento  : ate100k | 100k_500k | 500k_2mi | 2mi_10mi | mais10mi
-  q3 colaborador  : 1_10 | 11_50 | 51_200 | mais200
+  q2 faturamento  : ate100k | 100k_500k | 500k_1mi | 1mi_2mi | 2mi_5mi | 5mi_10mi | mais10mi
+  q3 colaborador  : 1_10 | 11_50 | 51_100 | 101_200 | mais200
   q4 erp          : winthor | totvs | bling | outro | nenhum
   q5 indicadores  : cabeca | planilhas | erp | bi | nao_acompanho
   q6 frequencia   : dia | semana | mes | problema

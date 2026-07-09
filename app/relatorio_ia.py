@@ -22,7 +22,8 @@ _ROTULOS = {
     "servicos": "Serviços", "outro": "Outro",
     # faturamento
     "ate100k": "até R$100 mil/mês", "100k_500k": "R$100–500 mil/mês",
-    "500k_2mi": "R$500 mil–2 mi/mês", "2mi_10mi": "R$2–10 mi/mês", "mais10mi": "+R$10 mi/mês",
+    "500k_1mi": "R$500 mil–1 mi/mês", "1mi_2mi": "R$1–2 mi/mês",
+    "2mi_5mi": "R$2–5 mi/mês", "5mi_10mi": "R$5–10 mi/mês", "mais10mi": "+R$10 mi/mês",
     # erp
     "winthor": "Winthor", "totvs": "TOTVS", "bling": "Bling/Tiny",
     "nenhum": "sem sistema integrado",
