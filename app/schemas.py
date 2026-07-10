@@ -11,9 +11,9 @@ Perguntas (spec §4):
   q3 colaborador  : 1_10 | 11_50 | 51_100 | 101_200 | mais200
   q4 erp          : winthor | sankhya | bling | outro | nenhum
   q5 indicadores  : cabeca | planilhas | erp | bi | nao_acompanho
-  q6 frequencia   : dia | semana | mes | problema
-  q7 tempo        : quase_nada | horas | dia_inteiro | mais
-  q8 margem       : faturamento | fat_margens | margem_completa
+  q6 frequencia   : dia | semana | mes | problema | nao_olho
+  q7 tempo        : quase_nada | horas | dia_inteiro | mais | nao_sei
+  q8 margem       : faturamento | fat_margens | margem_completa | nao_acompanho
   q9 metas        : sem_metas | fim_mes | de_perto
   q10 vendedor    : nao | esforco | facil
   q11 perdeu      : nao_ideia | nocao | exato

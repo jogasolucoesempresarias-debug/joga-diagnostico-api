@@ -24,11 +24,11 @@ PRIORIDADE = [AREA_CARTEIRA, AREA_COMERCIAL, AREA_DADOS, AREA_ESTOQUE]
 PONTOS = {
     AREA_DADOS: {
         "q5": {"cabeca": 0, "planilhas": 1, "erp": 2, "bi": 3, "nao_acompanho": 0},
-        "q6": {"dia": 3, "semana": 2, "mes": 1, "problema": 0},
-        "q7": {"quase_nada": 3, "horas": 2, "dia_inteiro": 1, "mais": 0},
+        "q6": {"dia": 3, "semana": 2, "mes": 1, "problema": 0, "nao_olho": 0},
+        "q7": {"quase_nada": 3, "horas": 2, "dia_inteiro": 1, "mais": 0, "nao_sei": 0},
     },
     AREA_COMERCIAL: {
-        "q8": {"faturamento": 0, "fat_margens": 1, "margem_completa": 2},
+        "q8": {"faturamento": 0, "fat_margens": 1, "margem_completa": 2, "nao_acompanho": 0},
         "q9": {"sem_metas": 0, "fim_mes": 1, "de_perto": 2},
         "q10": {"nao": 0, "esforco": 1, "facil": 2},
     },
