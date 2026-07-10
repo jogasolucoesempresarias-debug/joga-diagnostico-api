@@ -25,7 +25,7 @@ _ROTULOS = {
     "500k_1mi": "R$500 mil–1 mi/mês", "1mi_2mi": "R$1–2 mi/mês",
     "2mi_5mi": "R$2–5 mi/mês", "5mi_10mi": "R$5–10 mi/mês", "mais10mi": "+R$10 mi/mês",
     # erp
-    "winthor": "Winthor", "totvs": "TOTVS", "bling": "Bling/Tiny",
+    "winthor": "Winthor", "sankhya": "Sankhya", "bling": "Bling/Tiny",
     "nenhum": "sem sistema integrado",
     # urgência
     "pra_ontem": "para ontem (urgente)", "3_meses": "nos próximos 3 meses",
