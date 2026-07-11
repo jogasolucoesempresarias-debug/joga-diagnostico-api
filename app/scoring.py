@@ -119,7 +119,12 @@ def calcular(respostas: dict, setor: Optional[str] = None) -> dict:
     # Ordena por fração (mais fraco primeiro); desempata pela PRIORIDADE.
     ordenadas = sorted(areas, key=lambda a: (fracoes[a], PRIORIDADE.index(a)))
 
-    oportunidades = [{"area": a, "titulo": TITULOS[a]} for a in ordenadas[:3]]
+    # Oportunidades = TODAS as áreas que precisam de atenção (Crítico/Atenção), mais fraca
+    # primeiro. Considera todos os pilares — não trava num número fixo (antes era só 3).
+    fracas = [a for a in ordenadas if placar[a] in ("Crítico", "Atenção")]
+    if not fracas:
+        fracas = ordenadas[:1]  # gestão madura → aponta o ponto mais fraco como melhoria
+    oportunidades = [{"area": a, "titulo": TITULOS[a]} for a in fracas]
     dor = ordenadas[0]
     maior_dor = {"area": dor, "titulo": TITULOS[dor], "ancora": ANCORAS[dor]}
 

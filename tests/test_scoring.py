@@ -24,8 +24,8 @@ def test_tudo_pior_da_critico_em_todas_areas():
         "Dados": "Crítico", "Comercial": "Crítico", "Financeiro": "Crítico",
         "Gestão de Clientes": "Crítico", "Estoque": "Crítico",
     }
-    # 3 oportunidades sempre
-    assert len(r["oportunidades"]) == 3
+    # todas as 5 áreas críticas viram oportunidade (não trava em 3)
+    assert len(r["oportunidades"]) == 5
 
 
 def test_tudo_melhor_da_maduro():
@@ -37,7 +37,7 @@ def test_servicos_nao_pontua_estoque():
     r = scoring.calcular(PIOR, setor="servicos")
     assert "Estoque" not in r["placar"]
     assert set(r["placar"].keys()) == {"Dados", "Comercial", "Financeiro", "Gestão de Clientes"}
-    assert len(r["oportunidades"]) == 3
+    assert len(r["oportunidades"]) == 4  # serviços: 4 áreas, todas críticas
 
 
 def test_inadimplencia_nao_vende_a_prazo_nao_penaliza():
