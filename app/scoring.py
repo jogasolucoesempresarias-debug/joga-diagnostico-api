@@ -15,7 +15,7 @@ from typing import Optional
 AREA_DADOS = "Dados"
 AREA_COMERCIAL = "Comercial"
 AREA_FINANCEIRO = "Financeiro"
-AREA_CARTEIRA = "Carteira"
+AREA_CARTEIRA = "Gestão de Clientes"
 AREA_ESTOQUE = "Estoque"
 
 # Ordem de prioridade para desempate (dor mais estratégica primeiro)
@@ -57,7 +57,7 @@ TITULOS = {
     AREA_DADOS: "Decisão sem dados: indicadores na cabeça e na planilha",
     AREA_COMERCIAL: "Comercial no escuro: sem visão de margem, metas e vendedor",
     AREA_FINANCEIRO: "Financeiro no escuro: lucro real, caixa e inadimplência sem controle",
-    AREA_CARTEIRA: "Carteira sem gestão: clientes somem e ninguém percebe",
+    AREA_CARTEIRA: "Sua base de clientes some e ninguém percebe",
     AREA_ESTOQUE: "Estoque no feeling: capital parado e ruptura",
 }
 
@@ -66,7 +66,7 @@ ANCORAS = {
     AREA_DADOS: "Painel de Indicadores (BI)",
     AREA_COMERCIAL: "Gestão de Vendas",
     AREA_FINANCEIRO: "Resultado Gerencial (DRE) + IA",
-    AREA_CARTEIRA: "Gestão de Carteira de Clientes",
+    AREA_CARTEIRA: "Gestão de Clientes",
     AREA_ESTOQUE: "Gestão de Estoque",
 }
 

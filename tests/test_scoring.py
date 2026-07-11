@@ -22,7 +22,7 @@ def test_tudo_pior_da_critico_em_todas_areas():
     r = scoring.calcular(PIOR, setor="atacado")
     assert r["placar"] == {
         "Dados": "Crítico", "Comercial": "Crítico", "Financeiro": "Crítico",
-        "Carteira": "Crítico", "Estoque": "Crítico",
+        "Gestão de Clientes": "Crítico", "Estoque": "Crítico",
     }
     # 3 oportunidades sempre
     assert len(r["oportunidades"]) == 3
@@ -36,7 +36,7 @@ def test_tudo_melhor_da_maduro():
 def test_servicos_nao_pontua_estoque():
     r = scoring.calcular(PIOR, setor="servicos")
     assert "Estoque" not in r["placar"]
-    assert set(r["placar"].keys()) == {"Dados", "Comercial", "Financeiro", "Carteira"}
+    assert set(r["placar"].keys()) == {"Dados", "Comercial", "Financeiro", "Gestão de Clientes"}
     assert len(r["oportunidades"]) == 3
 
 

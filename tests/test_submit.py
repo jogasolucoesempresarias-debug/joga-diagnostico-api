@@ -43,7 +43,7 @@ def test_submit_retorna_placar_e_oportunidades(monkeypatch):
     assert resp.status_code == 200
     data = resp.json()
     assert data["id"] == 123
-    assert data["placar"]["Carteira"] == "Crítico"
+    assert data["placar"]["Gestão de Clientes"] == "Crítico"
     assert len(data["oportunidades"]) == 3
     assert "48h" in data["mensagem"]
 

@@ -86,14 +86,14 @@ BENCH = {
     "Dados": "empresas organizadas acompanham os indicadores num painel único e atualizado, sem depender de planilha manual",
     "Comercial": "o padrão é acompanhar margem por produto e por cliente, metas em tempo real e ranking por vendedor",
     "Financeiro": "o padrão é fechar o DRE todo mês, saber o lucro líquido real e cobrar a inadimplência ativamente — sem deixar capital preso em atraso",
-    "Carteira": "o padrão é classificar a carteira e agir sobre quem está sumindo antes de perder o cliente de vez",
+    "Gestão de Clientes": "o padrão é classificar a base de clientes e agir sobre quem está sumindo antes de perder o cliente de vez",
     "Estoque": "o padrão é comprar por giro e cobertura, sabendo o capital parado e antecipando a ruptura",
 }
 
 AREA_QUESTIONS = {
     "Dados": ["q5", "q6", "q7"], "Comercial": ["q8", "q9", "q10"],
     "Financeiro": ["q19", "q20", "q21"],
-    "Carteira": ["q11", "q12", "q13"], "Estoque": ["q14", "q15", "q16"],
+    "Gestão de Clientes": ["q11", "q12", "q13"], "Estoque": ["q14", "q15", "q16"],
 }
 
 
