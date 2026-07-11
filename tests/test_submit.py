@@ -44,7 +44,7 @@ def test_submit_retorna_placar_e_oportunidades(monkeypatch):
     data = resp.json()
     assert data["id"] == 123
     assert data["placar"]["Gestão de Clientes"] == "Crítico"
-    assert len(data["oportunidades"]) == 3
+    assert len(data["oportunidades"]) == 5  # 5 áreas, todas críticas → 5 oportunidades
     assert "48h" in data["mensagem"]
 
     main.app.dependency_overrides.clear()
