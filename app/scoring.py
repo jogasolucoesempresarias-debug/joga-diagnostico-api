@@ -14,11 +14,12 @@ from typing import Optional
 # Nomes de exibição das áreas (chaves do placar)
 AREA_DADOS = "Dados"
 AREA_COMERCIAL = "Comercial"
+AREA_FINANCEIRO = "Financeiro"
 AREA_CARTEIRA = "Carteira"
 AREA_ESTOQUE = "Estoque"
 
 # Ordem de prioridade para desempate (dor mais estratégica primeiro)
-PRIORIDADE = [AREA_CARTEIRA, AREA_COMERCIAL, AREA_DADOS, AREA_ESTOQUE]
+PRIORIDADE = [AREA_CARTEIRA, AREA_FINANCEIRO, AREA_COMERCIAL, AREA_DADOS, AREA_ESTOQUE]
 
 # Pontuação por resposta (maior = mais maduro). Ver spec §4/§5.1.
 PONTOS = {
@@ -31,6 +32,12 @@ PONTOS = {
         "q8": {"faturamento": 0, "fat_margens": 1, "margem_completa": 2, "nao_acompanho": 0},
         "q9": {"sem_metas": 0, "fim_mes": 1, "de_perto": 2},
         "q10": {"nao": 0, "esforco": 1, "facil": 2},
+    },
+    AREA_FINANCEIRO: {
+        "q19": {"lucro_exato": 2, "lucro_estimo": 1, "lucro_faturamento": 0},
+        # "não vendo a prazo" = sem risco de inadimplência → nota cheia (não penaliza caixa/à vista).
+        "q20": {"inad_controlo": 2, "inad_nocao": 1, "inad_nao": 0, "inad_nao_prazo": 2},
+        "q21": {"dre_mes": 2, "dre_as_vezes": 1, "dre_nunca": 0},
     },
     AREA_CARTEIRA: {
         "q11": {"nao_ideia": 0, "nocao": 1, "exato": 2},
@@ -49,6 +56,7 @@ PONTOS = {
 TITULOS = {
     AREA_DADOS: "Decisão sem dados: indicadores na cabeça e na planilha",
     AREA_COMERCIAL: "Comercial no escuro: sem visão de margem, metas e vendedor",
+    AREA_FINANCEIRO: "Financeiro no escuro: lucro real, caixa e inadimplência sem controle",
     AREA_CARTEIRA: "Carteira sem gestão: clientes somem e ninguém percebe",
     AREA_ESTOQUE: "Estoque no feeling: capital parado e ruptura",
 }
@@ -57,6 +65,7 @@ TITULOS = {
 ANCORAS = {
     AREA_DADOS: "Painel de Indicadores (BI)",
     AREA_COMERCIAL: "Gestão de Vendas",
+    AREA_FINANCEIRO: "Resultado Gerencial (DRE) + IA",
     AREA_CARTEIRA: "Gestão de Carteira de Clientes",
     AREA_ESTOQUE: "Gestão de Estoque",
 }
@@ -100,7 +109,7 @@ def calcular(respostas: dict, setor: Optional[str] = None) -> dict:
       }
     """
     respostas = respostas or {}
-    areas = [AREA_DADOS, AREA_COMERCIAL, AREA_CARTEIRA]
+    areas = [AREA_DADOS, AREA_COMERCIAL, AREA_FINANCEIRO, AREA_CARTEIRA]
     if _estoque_se_aplica(setor):
         areas.append(AREA_ESTOQUE)
 

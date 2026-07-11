@@ -24,6 +24,9 @@ Perguntas (spec §4):
   q16 compras     : feeling | misto | dados
   q17 dor         : texto livre (vai em `desafio`)
   q18 urgencia    : pra_ontem | 3_meses | pesquisando
+  q19 lucro       : lucro_exato | lucro_estimo | lucro_faturamento
+  q20 inadimplenc : inad_controlo | inad_nocao | inad_nao | inad_nao_prazo
+  q21 dre_caixa   : dre_mes | dre_as_vezes | dre_nunca
 """
 from typing import Dict, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator

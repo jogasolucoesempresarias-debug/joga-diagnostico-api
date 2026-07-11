@@ -73,18 +73,26 @@ SINAIS = {
             "as_vezes": "tem ruptura de itens importantes de vez em quando"},
     "q16": {"feeling": "faz as compras no feeling, sem giro/cobertura",
             "misto": "compra meio no feeling, meio no dado"},
+    "q19": {"lucro_faturamento": "não sabe o lucro líquido real — só acompanha o faturamento",
+            "lucro_estimo": "só estima o lucro, sem fechar o número de verdade"},
+    "q20": {"inad_nao": "não controla a inadimplência — não sabe quanto está em atraso nem quem não pagou",
+            "inad_nocao": "tem só uma noção da inadimplência, sem cobrança ativa"},
+    "q21": {"dre_nunca": "não fecha um resultado gerencial (DRE) nem acompanha o fluxo de caixa",
+            "dre_as_vezes": "fecha o DRE só de vez em quando"},
 }
 
 # Padrão do setor por área (comparação, nunca cifra).
 BENCH = {
     "Dados": "empresas organizadas acompanham os indicadores num painel único e atualizado, sem depender de planilha manual",
     "Comercial": "o padrão é acompanhar margem por produto e por cliente, metas em tempo real e ranking por vendedor",
+    "Financeiro": "o padrão é fechar o DRE todo mês, saber o lucro líquido real e cobrar a inadimplência ativamente — sem deixar capital preso em atraso",
     "Carteira": "o padrão é classificar a carteira e agir sobre quem está sumindo antes de perder o cliente de vez",
     "Estoque": "o padrão é comprar por giro e cobertura, sabendo o capital parado e antecipando a ruptura",
 }
 
 AREA_QUESTIONS = {
     "Dados": ["q5", "q6", "q7"], "Comercial": ["q8", "q9", "q10"],
+    "Financeiro": ["q19", "q20", "q21"],
     "Carteira": ["q11", "q12", "q13"], "Estoque": ["q14", "q15", "q16"],
 }
 

@@ -4,6 +4,7 @@ from app import scoring
 PIOR = {
     "q5": "cabeca", "q6": "problema", "q7": "mais",
     "q8": "faturamento", "q9": "sem_metas", "q10": "nao",
+    "q19": "lucro_faturamento", "q20": "inad_nao", "q21": "dre_nunca",
     "q11": "nao_ideia", "q12": "nao", "q13": "nao_sei",
     "q14": "nao", "q15": "sempre", "q16": "feeling",
 }
@@ -11,6 +12,7 @@ PIOR = {
 MELHOR = {
     "q5": "bi", "q6": "dia", "q7": "quase_nada",
     "q8": "margem_completa", "q9": "de_perto", "q10": "facil",
+    "q19": "lucro_exato", "q20": "inad_controlo", "q21": "dre_mes",
     "q11": "exato", "q12": "formal", "q13": "menos10",
     "q14": "exato", "q15": "raramente", "q16": "dados",
 }
@@ -19,7 +21,7 @@ MELHOR = {
 def test_tudo_pior_da_critico_em_todas_areas():
     r = scoring.calcular(PIOR, setor="atacado")
     assert r["placar"] == {
-        "Dados": "Crítico", "Comercial": "Crítico",
+        "Dados": "Crítico", "Comercial": "Crítico", "Financeiro": "Crítico",
         "Carteira": "Crítico", "Estoque": "Crítico",
     }
     # 3 oportunidades sempre
@@ -34,8 +36,15 @@ def test_tudo_melhor_da_maduro():
 def test_servicos_nao_pontua_estoque():
     r = scoring.calcular(PIOR, setor="servicos")
     assert "Estoque" not in r["placar"]
-    assert set(r["placar"].keys()) == {"Dados", "Comercial", "Carteira"}
+    assert set(r["placar"].keys()) == {"Dados", "Comercial", "Financeiro", "Carteira"}
     assert len(r["oportunidades"]) == 3
+
+
+def test_inadimplencia_nao_vende_a_prazo_nao_penaliza():
+    # 'não vendo a prazo' = nota cheia em q20 (sem risco de inadimplência)
+    fin = {"q19": "lucro_exato", "q20": "inad_nao_prazo", "q21": "dre_mes"}
+    r = scoring.calcular(fin, setor="varejo")
+    assert r["placar"]["Financeiro"] == "Maduro"
 
 
 def test_respostas_ausentes_valem_zero():
