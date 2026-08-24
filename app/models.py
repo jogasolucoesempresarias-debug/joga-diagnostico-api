@@ -41,10 +41,30 @@ class Diagnostico(Base):
     # Controle de envio
     prebrief_enviado = Column(Boolean, default=False)
 
+    # Origem do lead: 'site' (questionário geral) ou 'lp-estoque' (LP de Gestão de Estoque).
+    origem = Column(String(30), default="site")
+    # Análise estruturada mostrada ao cliente na tela (só no fluxo da LP): leitura/pontos/fecho.
+    analise = Column(JSONB, nullable=True)
 
-def salvar(db, *, contato: dict, respostas: dict, placar: dict, relatorio: str) -> "Diagnostico":
-    """Persiste um novo diagnóstico e devolve o objeto salvo (com id)."""
+
+def salvar(
+    db,
+    *,
+    contato: dict,
+    respostas: dict,
+    placar: dict,
+    relatorio: str,
+    origem: str = "site",
+    analise: dict | None = None,
+) -> "Diagnostico":
+    """Persiste um novo diagnóstico e devolve o objeto salvo (com id).
+
+    `origem`/`analise` são usados pelo fluxo da LP de estoque; o questionário geral chama
+    sem eles e continua gravando exatamente como antes.
+    """
     registro = Diagnostico(
+        origem=origem,
+        analise=analise,
         nome=contato.get("nome"),
         empresa=contato.get("empresa"),
         cargo=contato.get("cargo"),

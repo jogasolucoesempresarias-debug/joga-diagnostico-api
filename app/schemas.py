@@ -87,3 +87,52 @@ class RespostaParcial(BaseModel):
     placar: Dict[str, str]
     oportunidades: list
     mensagem: str
+
+
+class SubmitEstoqueBody(BaseModel):
+    """
+    Questionário da LP de Gestão de Estoque (/solucoes/gestao-de-estoque).
+
+    Muro mais curto que o do questionário geral — nome, empresa e telefone. Diferente do
+    SubmitBody, aqui o WhatsApp é OBRIGATÓRIO: o disparo do lead para a equipe é por
+    WhatsApp, e sem telefone o lead não é acionável. E-mail é opcional.
+    """
+    nome: str = Field(..., min_length=1)
+    empresa: str = Field(..., min_length=1)
+    whatsapp: str = Field(..., min_length=8)
+    email: Optional[str] = None
+    cargo: Optional[str] = None
+    consent: bool = False
+
+    # Contexto perguntado antes das 12 perguntas — serve à IA (para não escrever genérico)
+    # e cai nas MESMAS colunas que o admin já filtra (setor, erp).
+    setor: Optional[str] = None
+    erp: Optional[str] = None
+    skus: Optional[str] = None          # faixa de SKUs (só no fluxo de estoque)
+
+    # Respostas e1..e12 (códigos: sim | mais_ou_menos | nao)
+    respostas: Dict[str, str] = Field(default_factory=dict)
+
+    @field_validator("consent")
+    @classmethod
+    def _consent_obrigatorio(cls, v: bool) -> bool:
+        if not v:
+            raise ValueError("É necessário aceitar o consentimento (LGPD).")
+        return v
+
+    def contato(self) -> dict:
+        """Mesmo formato do SubmitBody.contato(), para reusar prebrief e models.salvar."""
+        return {
+            "nome": self.nome,
+            "empresa": self.empresa,
+            "cargo": self.cargo,
+            "whatsapp": self.whatsapp,
+            "email": self.email,
+            "setor": self.setor,
+            "erp": self.erp,
+            "skus": self.skus,
+            "faturamento": None,
+            "colaboradores": None,
+            "desafio": None,      # preenchido pelo endpoint com a síntese do placar
+            "urgencia": None,
+        }

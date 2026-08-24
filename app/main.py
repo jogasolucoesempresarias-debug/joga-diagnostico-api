@@ -14,11 +14,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
-from . import models, scoring, relatorio_ia, prebrief
+from . import models, scoring, relatorio_ia, prebrief, estoque_scoring, estoque_ia
 from .admin import router as admin_router
 from .config import config
 from .database import get_db, init_db, migrate_db
-from .schemas import SubmitBody
+from .schemas import SubmitBody, SubmitEstoqueBody
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates")
 MODELO_PATH = os.path.join(TEMPLATES_DIR, "modelo_diagnostico.xlsx")
@@ -99,6 +99,95 @@ async def submit(body: SubmitBody, background: BackgroundTasks, db: Session = De
 
     except Exception as e:  # noqa: BLE001
         logger.error(f"Erro no /submit: {e}")
+        return JSONResponse({"erro": str(e)}, status_code=500)
+
+
+# Texto das perguntas e1..e12 — precisa bater com o que a LP mostra (lib/lp-estoque.ts).
+# Fica aqui porque a IA cita as respostas quase literalmente: sem o enunciado, ela inventa.
+PERGUNTAS_ESTOQUE = {
+    "e1": "Você sabe quanto dinheiro está parado em estoque acima da necessidade?",
+    "e2": "Sua empresa identifica rapidamente produtos há muitos dias sem venda?",
+    "e3": "Você acompanha o percentual de ruptura do estoque?",
+    "e4": "A ruptura é acompanhada por comprador e por curva ABC?",
+    "e5": "Sua equipe identifica antecipadamente produtos próximos do vencimento?",
+    "e6": "Você sabe quanto perdeu por vencimento nos últimos 12 meses?",
+    "e7": "Seus compradores trabalham com cobertura-alvo definida?",
+    "e8": "O lead time real dos fornecedores é acompanhado?",
+    "e9": "Sua empresa tem orçamento estruturado de compras?",
+    "e10": "Existe sugestão de compras baseada em parâmetros definidos pela empresa?",
+    "e11": "Os responsáveis recebem automaticamente os relatórios e alertas do estoque?",
+    "e12": "Cada comprador tem meta de ruptura e de compras acompanhada individualmente?",
+}
+
+
+def _analise_markdown(analise: dict) -> str:
+    """A coluna `relatorio` é Text e o e-mail da equipe renderiza markdown — converte a
+    análise estruturada para o mesmo formato, sem duplicar geração por IA."""
+    partes = [analise.get("leitura", "")]
+    for p in analise.get("pontos", []):
+        partes.append(f"### {p.get('titulo', '')}\n{p.get('texto', '')}")
+    if analise.get("fecho"):
+        partes.append(f"**Por onde começar:** {analise['fecho']}")
+    return "\n\n".join(x for x in partes if x)
+
+
+@app.post("/api/diagnostico/estoque")
+async def submit_estoque(
+    body: SubmitEstoqueBody, background: BackgroundTasks, db: Session = Depends(get_db)
+):
+    """
+    Questionário da LP de Gestão de Estoque.
+
+    Diferenças em relação ao /submit geral:
+      • placar próprio (5 áreas de estoque, não as 5 do negócio) — estoque_scoring;
+      • a análise da IA é escrita PARA o cliente e devolvida na resposta (ele lê na tela
+        assim que deixa o contato) — estoque_ia, sem nenhuma cifra;
+      • o lead cai na MESMA tabela e no MESMO admin, marcado com origem='lp-estoque';
+      • dispara só para a equipe JOGA (WhatsApp + e-mail). O cliente NÃO recebe envio:
+        o que ele queria já apareceu na tela.
+    """
+    try:
+        contato = body.contato()
+
+        resultado = estoque_scoring.calcular(body.respostas)
+        # O questionário de estoque não tem campo aberto de dor: sintetiza do placar para o
+        # pré-brief não sair com "(não declarada)".
+        contato["desafio"] = estoque_scoring.desafio_sintetico(resultado)
+
+        analise = estoque_ia.gerar(contato, body.respostas, PERGUNTAS_ESTOQUE, resultado)
+
+        registro = models.salvar(
+            db,
+            contato=contato,
+            respostas=body.respostas,
+            placar=resultado["placar"],
+            relatorio=_analise_markdown(analise),
+            origem="lp-estoque",
+            analise=analise,
+        )
+
+        # Só equipe (WhatsApp + e-mail). Sem enviar_aviso_cliente aqui, de propósito: o que
+        # o cliente queria já apareceu na tela dele.
+        background.add_task(
+            prebrief.enviar_equipe,
+            contato,
+            resultado,
+            _analise_markdown(analise),
+            False,
+            prebrief.montar_texto_estoque(contato, resultado),
+            f"[Estoque] {contato.get('empresa')} — {resultado['maior_dor']['area']}",
+        )
+
+        return {
+            "id": registro.id,
+            "placar": resultado["placar"],
+            "resumo": resultado["resumo"],
+            "oportunidades": [o["titulo"] for o in resultado["oportunidades"]],
+            "analise": analise,
+        }
+
+    except Exception as e:  # noqa: BLE001
+        logger.error(f"Erro no /estoque: {e}")
         return JSONResponse({"erro": str(e)}, status_code=500)
 
 

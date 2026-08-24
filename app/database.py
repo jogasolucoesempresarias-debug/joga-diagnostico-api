@@ -46,9 +46,14 @@ def init_db(retries: int = 15, delay: int = 3):
 
 
 def migrate_db():
-    """Migrações incrementais idempotentes (vazio por ora — reservado p/ Fase 2b)."""
+    """Migrações incrementais idempotentes (rodam no lifespan, a cada start)."""
     migrations: list[str] = [
-        # Ex. futuro (Fase 2b): "ALTER TABLE diagnosticos ADD COLUMN IF NOT EXISTS achados JSONB",
+        # Diagnóstico de estoque (LP /solucoes/gestao-de-estoque): separa a origem do lead
+        # no admin. 'site' = questionário geral; 'lp-estoque' = questionário da LP.
+        "ALTER TABLE diagnosticos ADD COLUMN IF NOT EXISTS origem VARCHAR(30) DEFAULT 'site'",
+        # A LP pede menos campos que o questionário geral (nome/empresa/telefone) — cargo e
+        # os demais continuam opcionais, mas 'empresa' segue obrigatória nos dois fluxos.
+        "ALTER TABLE diagnosticos ADD COLUMN IF NOT EXISTS analise JSONB",
     ]
     if not migrations:
         return

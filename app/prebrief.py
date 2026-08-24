@@ -35,6 +35,9 @@ _ROTULOS = {
     "2mi_5mi": "R$2–5 mi/mês", "5mi_10mi": "R$5–10 mi/mês", "mais10mi": "+R$10 mi/mês",
     "winthor": "Winthor", "sankhya": "Sankhya", "bling": "Bling/Tiny", "nenhum": "sem sistema integrado",
     "pra_ontem": "Pra ontem", "3_meses": "Nos próximos 3 meses", "pesquisando": "Pesquisando",
+    # Faixas de SKU — só o questionário de estoque (LP) usa.
+    "ate500": "até 500", "500_2000": "500 a 2.000", "2000_5000": "2.000 a 5.000",
+    "mais5000": "mais de 5.000", "nao_sei": "quantidade não sabida",
 }
 
 
@@ -83,9 +86,67 @@ SOLUÇÃO ÂNCORA SUGERIDA: {ancora}"""
 
 # ───────────────────────── Envios ─────────────────────────
 
-def enviar_equipe(contato: dict, resultado: dict, relatorio: str, tem_planilha: bool = False) -> dict:
-    """1 e-mail (pré-brief + relatório) + 1 WhatsApp (pré-brief) para a equipe JOGA."""
-    texto = montar_texto(contato, resultado, tem_planilha)
+def montar_texto_estoque(contato: dict, resultado: dict) -> str:
+    """
+    Pré-brief do diagnóstico de ESTOQUE (LP).
+
+    Texto próprio em vez do genérico porque o questionário de estoque não pergunta
+    faturamento, colaboradores, urgência nem aceita planilha — o pré-brief geral mostraria
+    quatro linhas de "não informado" e uma frase dizendo que o cliente "citou" uma dor que
+    na verdade foi sintetizada do placar.
+    """
+    placar = resultado.get("placar", {})
+    dor = resultado.get("maior_dor", {})
+    dor_area = dor.get("area", "")
+    resumo = resultado.get("resumo", {})
+
+    # Num placar todo Maduro não existe "maior dor" — a área só indica por onde aprofundar,
+    # e marcá-la como dor faria a equipe abrir a conversa apontando um problema inexistente.
+    marca = "   <- aprofundar" if resultado.get("maduro") else "   <- maior dor"
+    linhas_placar = "\n".join(
+        f" {area+':':<17}{nivel}{marca if area == dor_area else ''}"
+        for area, nivel in placar.items()
+    )
+    fracas = ", ".join(o["area"] for o in resultado.get("oportunidades", [])) or "nenhuma"
+
+    if resultado.get("maduro"):
+        gancho = (
+            "Operação madura no básico — não chegar vendendo arrumação. O caminho aqui é "
+            f"aprofundamento: {dor.get('ancora', '')}."
+        )
+    else:
+        gancho = (
+            f"Abrir por {dor_area}. Mostrar na tela: {dor.get('ancora', '')}."
+        )
+
+    return f"""NOVO DIAGNÓSTICO DE ESTOQUE (LP) — {contato.get('empresa')}
+Contato: {contato.get('nome')} — {contato.get('whatsapp')}{(' / ' + contato['email']) if contato.get('email') else ''}
+Perfil: {_rot(contato.get('setor'))} · {_rot(contato.get('skus'))} itens · ERP {_rot(contato.get('erp'))}
+
+PLACAR
+{linhas_placar}
+
+RESPOSTAS: {resumo.get('sim', 0)} sim · {resumo.get('parcial', 0)} parcial · {resumo.get('nao', 0)} não
+ÁREAS FRACAS: {fracas}
+
+POR ONDE ABRIR A CONVERSA:
+ {gancho}"""
+
+
+def enviar_equipe(
+    contato: dict,
+    resultado: dict,
+    relatorio: str,
+    tem_planilha: bool = False,
+    texto: str = None,
+    assunto: str = None,
+) -> dict:
+    """1 e-mail (pré-brief + relatório) + 1 WhatsApp (pré-brief) para a equipe JOGA.
+
+    `texto`/`assunto` permitem que um fluxo com questionário próprio (ex.: estoque) mande o
+    seu pré-brief pronto e um assunto que separe os dois funis na caixa de entrada.
+    """
+    texto = texto or montar_texto(contato, resultado, tem_planilha)
 
     if not config.ENVIO_ATIVO:
         logger.info("[ENVIO_ATIVO=false] E-mail/zap da equipe NÃO enviados (dev). Pré-brief:\n%s", texto)
@@ -97,7 +158,9 @@ def enviar_equipe(contato: dict, resultado: dict, relatorio: str, tem_planilha: 
     if not wpp["sucesso"]:
         erros.append(f"whatsapp: {wpp['erro']}")
 
-    assunto = f"[Diagnóstico] {contato.get('empresa')} — {resultado.get('maior_dor', {}).get('area', '')}"
+    assunto = assunto or (
+        f"[Diagnóstico] {contato.get('empresa')} — {resultado.get('maior_dor', {}).get('area', '')}"
+    )
     mail = email_service.enviar(config.PREBRIEF_EMAILS, assunto, _email_equipe_html(texto, relatorio))
     if not mail["sucesso"]:
         erros.append(f"email: {mail['erro']}")
