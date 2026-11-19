@@ -53,6 +53,12 @@ class Config:
     # própria instância UazAPI/infra — por ora a JOGA é quem contata o cliente.
     AVISO_CLIENTE_ATIVO = os.getenv("AVISO_CLIENTE_ATIVO", "false").lower() == "true"
 
+    # Blog: ao publicar, pede à GitHub Action do site que reconstrua (repository_dispatch).
+    # Token fine-grained só deste repo, permissão "Contents: Read and write". Vazio = não
+    # dispara (o artigo fica salvo e entra no próximo deploy do site).
+    GITHUB_DISPATCH_TOKEN = os.getenv("GITHUB_DISPATCH_TOKEN", "")
+    GITHUB_DISPATCH_REPO = os.getenv("GITHUB_DISPATCH_REPO", "jogasolucoesempresarias-debug/sitejoga")
+
     TZ = os.getenv("TZ", "America/Sao_Paulo")
 
 

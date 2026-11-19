@@ -96,3 +96,40 @@ def atualizar_achados(db, diagnostico_id: int, achados: dict) -> bool:
     registro.tem_planilha = True
     db.commit()
     return True
+
+
+# ─────────────────────────────────────────────────────────────
+# Blog (jogasolucoes.com.br/blog) — o João escreve em /admin/blog, o site lê no build.
+# Imagens ficam NO POSTGRES (bytea): o backup diário só pega pg_dump, então arquivo em
+# volume ficaria de fora. São poucas e já chegam reduzidas (≤ 1600 px, WebP).
+# ─────────────────────────────────────────────────────────────
+from sqlalchemy import LargeBinary  # noqa: E402
+
+
+class Post(Base):
+    __tablename__ = "blog_posts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slug = Column(String(160), unique=True, nullable=False, index=True)
+    titulo = Column(String(200), nullable=False)
+    resumo = Column(String(400), default="")
+    categoria = Column(String(30), default="gestao")
+    autor = Column(String(30), default="joao")
+    capa_id = Column(String(32), nullable=True)
+    conteudo = Column(Text, default="")  # HTML já sanitizado (nh3) no salvamento
+    # 'rascunho' | 'publicado'
+    status = Column(String(20), default="rascunho", nullable=False)
+    publicado_em = Column(DateTime(timezone=True), nullable=True)
+    criado_em = Column(DateTime(timezone=True), server_default=func.now())
+    atualizado_em = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class Imagem(Base):
+    __tablename__ = "blog_imagens"
+
+    id = Column(String(32), primary_key=True)  # uuid4 hex — vira a URL /api/blog/img/<id>
+    mime = Column(String(40), nullable=False)
+    dados = Column(LargeBinary, nullable=False)
+    largura = Column(Integer)
+    altura = Column(Integer)
+    criado_em = Column(DateTime(timezone=True), server_default=func.now())

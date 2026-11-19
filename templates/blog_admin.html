@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Blog JOGA — Escrever</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" />
+<style>
+  :root{
+    --ink:#0e1116; --surface:#161b22; --surface2:#1b2027; --line:#2a323d;
+    --amber:#f4a52a; --cream:#f5f2ec; --mut:#8b94a3; --red:#f77; --green:#5cd08a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--cream);font:15px/1.5 system-ui,Segoe UI,Roboto,sans-serif}
+  a{color:var(--amber)}
+  .wrap{max-width:980px;margin:0 auto;padding:16px}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:14px 0;margin-bottom:20px}
+  .brand{font-weight:700} .brand b{color:var(--amber)}
+  .muted{color:var(--mut)} .small{font-size:13px}
+  .btn{border:1px solid var(--line);background:var(--surface);color:var(--cream);border-radius:999px;padding:9px 18px;font-weight:600;cursor:pointer;font-size:14px}
+  .btn:hover{border-color:var(--mut)}
+  .btn.amber{background:var(--amber);color:#13171e;border-color:var(--amber)}
+  .btn.danger{color:var(--red)}
+  .btn:disabled{opacity:.5;cursor:wait}
+  input,select,textarea{width:100%;background:var(--surface);border:1px solid var(--line);color:var(--cream);border-radius:8px;padding:10px 12px;font:inherit;outline:none}
+  input:focus,select:focus,textarea:focus{border-color:var(--amber)}
+  label{display:block;font-size:13px;font-weight:600;margin:16px 0 6px;color:#ddd}
+  .hint{font-weight:400;color:var(--mut)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:640px){.row{grid-template-columns:1fr}}
+
+  #login{max-width:360px;margin:14vh auto;text-align:center}
+  #login input{margin:14px 0;text-align:center}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+  .lista .item{display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+  .lista .item:last-child{border-bottom:0}
+  .lista .item:hover{background:var(--surface2)}
+  .lista .t{flex:1;min-width:0}
+  .lista .t b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .thumb{width:64px;height:40px;border-radius:6px;object-fit:cover;background:var(--surface2);flex:none}
+  .pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:11px;font-weight:700;white-space:nowrap}
+  .p-publicado{color:var(--green);background:#5cd08a18;border:1px solid #5cd08a40}
+  .p-rascunho{color:var(--mut);background:#8b94a318;border:1px solid var(--line)}
+  .vazio{padding:40px;text-align:center;color:var(--mut)}
+
+  .capa{display:flex;gap:14px;align-items:center}
+  .capa img{width:200px;height:105px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+  .capa .ph{width:200px;height:105px;border-radius:8px;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:13px}
+
+  /* Quill no tema escuro */
+  .ql-toolbar.ql-snow{border:1px solid var(--line);border-radius:8px 8px 0 0;background:var(--surface2);position:sticky;top:0;z-index:5}
+  .ql-container.ql-snow{border:1px solid var(--line);border-top:0;border-radius:0 0 8px 8px;background:var(--surface);font:16px/1.7 system-ui,Segoe UI,Roboto,sans-serif;min-height:420px}
+  .ql-editor{min-height:420px}
+  .ql-editor.ql-blank::before{color:var(--mut);font-style:normal}
+  .ql-snow .ql-stroke{stroke:#cfd3da} .ql-snow .ql-fill{fill:#cfd3da}
+  .ql-snow .ql-picker{color:#cfd3da}
+  .ql-snow .ql-picker-options{background:var(--surface2);border-color:var(--line)}
+  .ql-snow button:hover .ql-stroke,.ql-snow .ql-active .ql-stroke{stroke:var(--amber)}
+  .ql-snow button:hover .ql-fill,.ql-snow .ql-active .ql-fill{fill:var(--amber)}
+  .ql-snow .ql-picker-label:hover,.ql-snow .ql-picker-item:hover,.ql-snow .ql-picker-label.ql-active{color:var(--amber)}
+  .ql-snow .ql-tooltip{background:var(--surface2);border-color:var(--line);color:var(--cream);box-shadow:none;z-index:6}
+  .ql-snow .ql-tooltip input[type=text]{background:var(--ink);color:var(--cream);border-color:var(--line)}
+  .ql-editor img{max-width:100%;border-radius:8px}
+  .ql-editor blockquote{border-left:3px solid var(--amber)!important;color:#ddd}
+  .ql-snow .ql-picker.ql-header .ql-picker-label::before,.ql-snow .ql-picker.ql-header .ql-picker-item::before{content:'Texto normal'}
+  .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="2"]::before,.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="2"]::before{content:'Subtítulo'}
+  .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="3"]::before,.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="3"]::before{content:'Subtítulo menor'}
+  .ql-snow .ql-picker.ql-header{width:140px}
+
+  .barra{position:sticky;bottom:0;background:linear-gradient(transparent,var(--ink) 30%);padding:22px 0 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .barra .esp{flex:1}
+  #msg{flex-basis:100%;padding:10px 14px;border-radius:10px;display:none;background:var(--ink)!important}
+  #msg.ok{display:block;border:1px solid #5cd08a40;color:var(--green)}
+  #msg.erro{display:block;border:1px solid #f7777740;color:var(--red)}
+  #msg.info{display:block;border:1px solid #f4a52a40;color:var(--amber)}
+
+  /* prévia — imita a página do artigo no site */
+  #previa{position:fixed;inset:0;background:#13171e;overflow:auto;z-index:50;display:none}
+  #previa .fechar{position:fixed;top:14px;right:14px;z-index:51}
+  .art{max-width:760px;margin:0 auto;padding:60px 18px 80px}
+  .art .cat{color:var(--amber);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+  .art h1{font-size:clamp(28px,5vw,42px);line-height:1.1;margin:14px 0 12px}
+  .art .res{color:var(--mut);font-size:19px}
+  .art .capa-g{width:100%;border-radius:16px;margin:28px 0;border:1px solid var(--line)}
+  .prosa{font-size:17.5px;line-height:1.75;color:#e9e6e0}
+  .prosa h2{font-size:26px;margin:40px 0 12px;color:var(--cream)}
+  .prosa h3{font-size:20px;margin:30px 0 10px;color:var(--cream)}
+  .prosa img{max-width:100%;border-radius:12px;margin:12px 0}
+  .prosa blockquote{border-left:3px solid var(--amber);margin:24px 0;padding:4px 0 4px 18px;color:var(--cream);font-size:19px}
+  .prosa a{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<div id="login" style="display:none">
+  <h1>Blog JOGA</h1>
+  <p class="muted">Digite a senha do painel.</p>
+  <input id="tok" type="password" placeholder="Senha" autocomplete="current-password" />
+  <button class="btn amber" id="entrar" style="width:100%">Entrar</button>
+  <p id="loginErro" style="color:var(--red)"></p>
+</div>
+
+<div class="wrap" id="app" style="display:none">
+  <header class="top">
+    <div class="brand"><b>JOGA</b> · Blog</div>
+    <div style="display:flex;gap:8px">
+      <a class="btn" href="/blog/" target="_blank" rel="noopener">Ver o blog</a>
+      <button class="btn" id="sair">Sair</button>
+    </div>
+  </header>
+
+  <!-- LISTA -->
+  <section id="vLista">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px">
+      <h2 style="margin:0">Artigos</h2>
+      <button class="btn amber" id="novo">+ Novo artigo</button>
+    </div>
+    <div class="card lista" id="lista"></div>
+    <p class="muted small" id="avisoRebuild" style="display:none;margin-top:14px">
+      ⚠️ A atualização automática do site ainda não está ligada: o artigo publicado fica salvo,
+      mas só aparece no site no próximo deploy. Avise o Gabriel.
+    </p>
+  </section>
+
+  <!-- EDITOR -->
+  <section id="vEditor" style="display:none">
+    <button class="btn" id="voltar">← Voltar para a lista</button>
+    <span id="stTag" style="margin-left:10px"></span>
+
+    <label for="titulo">Título</label>
+    <input id="titulo" maxlength="200" placeholder="Ex.: Como saber se o seu estoque está prendendo dinheiro" />
+
+    <label for="resumo">Resumo <span class="hint">— aparece no card do blog e no Google. 1 ou 2 frases. <span id="cnt">0</span>/400</span></label>
+    <textarea id="resumo" rows="2" maxlength="400"></textarea>
+
+    <div class="row">
+      <div>
+        <label for="categoria">Assunto</label>
+        <select id="categoria">
+          <option value="estoque">Estoque</option>
+          <option value="vendas">Vendas</option>
+          <option value="clientes">Clientes</option>
+          <option value="financeiro">Financeiro</option>
+          <option value="gestao">Gestão</option>
+        </select>
+      </div>
+      <div>
+        <label for="autor">Autor</label>
+        <select id="autor">
+          <option value="joao">João Victor</option>
+          <option value="gabriel">Gabriel França</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Imagem de capa <span class="hint">— de preferência deitada (horizontal). Também aparece quando alguém compartilha o link.</span></label>
+    <div class="capa">
+      <div id="capaBox"><div class="ph">sem capa</div></div>
+      <div>
+        <button class="btn" id="capaBtn">Escolher imagem</button>
+        <button class="btn danger" id="capaTirar" style="display:none">Tirar</button>
+        <input type="file" id="capaFile" accept="image/*" style="display:none" />
+      </div>
+    </div>
+
+    <label>Texto</label>
+    <div id="editor"></div>
+    <p class="muted small">Dica: para pôr uma imagem no meio do texto, clique no ícone de imagem da barra
+      (ou cole/arraste a imagem). Use "Subtítulo" para dividir o artigo em partes.</p>
+
+    <details style="margin-top:10px">
+      <summary class="muted small" style="cursor:pointer">Endereço do artigo</summary>
+      <label for="slug">jogasolucoes.com.br/blog/<b id="slugPrev"></b>/</label>
+      <input id="slug" placeholder="gerado a partir do título" />
+      <p class="muted small" id="slugTrava" style="display:none">O artigo já foi publicado: o endereço não muda mais (links
+        compartilhados e o Google já apontam para ele).</p>
+    </details>
+
+    <div class="barra">
+      <div id="msg"></div>
+      <button class="btn" id="previaBtn">Ver prévia</button>
+      <span class="esp"></span>
+      <button class="btn danger" id="apagar" style="display:none">Apagar</button>
+      <button class="btn" id="despublicar" style="display:none">Tirar do ar</button>
+      <button class="btn" id="salvar">Salvar rascunho</button>
+      <button class="btn amber" id="publicar">Publicar</button>
+    </div>
+  </section>
+</div>
+
+<div id="previa">
+  <button class="btn amber fechar" id="fecharPrevia">Fechar prévia</button>
+  <article class="art" id="previaArt"></article>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<script>
+const $ = (id) => document.getElementById(id);
+const CAT = {estoque:'Estoque',vendas:'Vendas',clientes:'Clientes',financeiro:'Financeiro',gestao:'Gestão'};
+let TOKEN = '';
+try { TOKEN = localStorage.getItem('joga_blog_token') || ''; } catch (e) {}
+let atual = null;       // post em edição (objeto do servidor) ou {} para novo
+let sujo = false;
+let capaId = null;
+
+async function api(path, opts = {}) {
+  const r = await fetch('/api/blog/admin/api' + path, {
+    ...opts,
+    headers: {'X-Admin-Token': TOKEN, ...(opts.body && !(opts.body instanceof FormData) ? {'Content-Type':'application/json'} : {}), ...(opts.headers||{})},
+  });
+  if (r.status === 401) { sair(); throw new Error('Senha inválida'); }
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Erro ' + r.status);
+  return data;
+}
+
+function msg(tipo, texto) { const m = $('msg'); m.className = tipo; m.textContent = texto; }
+function limparMsg() { $('msg').className = ''; $('msg').textContent = ''; }
+function fmtData(s) { return s ? new Date(s).toLocaleDateString('pt-BR', {day:'2-digit',month:'short',year:'numeric'}) : ''; }
+function esc(s) { return (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// ── login ────────────────────────────────────────────────────
+async function entrar() {
+  try {
+    const st = await api('/status');
+    $('login').style.display = 'none'; $('app').style.display = 'block';
+    $('avisoRebuild').style.display = st.rebuild_configurado ? 'none' : 'block';
+    abrirLista();
+  } catch (e) {
+    $('app').style.display = 'none'; $('login').style.display = 'block';
+  }
+}
+function sair() {
+  TOKEN = ''; try { localStorage.removeItem('joga_blog_token'); } catch (e) {}
+  $('app').style.display = 'none'; $('login').style.display = 'block';
+}
+$('entrar').onclick = async () => {
+  TOKEN = $('tok').value.trim();
+  $('loginErro').textContent = '';
+  try {
+    await api('/status');
+    try { localStorage.setItem('joga_blog_token', TOKEN); } catch (e) {}
+    entrar();
+  } catch (e) { $('loginErro').textContent = 'Senha inválida.'; }
+};
+$('tok').addEventListener('keydown', e => { if (e.key === 'Enter') $('entrar').click(); });
+$('sair').onclick = sair;
+
+// ── lista ────────────────────────────────────────────────────
+async function abrirLista() {
+  if (sujo && !confirm('Há alterações não salvas. Sair mesmo assim?')) return;
+  sujo = false;
+  $('vEditor').style.display = 'none'; $('vLista').style.display = 'block';
+  const el = $('lista');
+  el.innerHTML = '<div class="vazio">Carregando…</div>';
+  const posts = await api('/posts');
+  if (!posts.length) { el.innerHTML = '<div class="vazio">Nenhum artigo ainda. Clique em <b>+ Novo artigo</b>.</div>'; return; }
+  el.innerHTML = posts.map(p => `
+    <div class="item" data-id="${p.id}">
+      ${p.capa_id ? `<img class="thumb" src="/api/blog/img/${p.capa_id}" alt="">` : '<div class="thumb"></div>'}
+      <div class="t"><b>${esc(p.titulo)}</b>
+        <span class="muted small">${CAT[p.categoria]||''} · ${p.status === 'publicado' ? 'publicado em ' + fmtData(p.publicado_em) : 'editado em ' + fmtData(p.atualizado_em)}</span></div>
+      <span class="pill p-${p.status}">${p.status === 'publicado' ? 'No ar' : 'Rascunho'}</span>
+    </div>`).join('');
+  el.querySelectorAll('.item').forEach(it => it.onclick = () => abrirEditor(+it.dataset.id));
+}
+$('novo').onclick = () => abrirEditor(null);
+$('voltar').onclick = abrirLista;
+
+// ── editor ───────────────────────────────────────────────────
+const quill = new Quill('#editor', {
+  theme: 'snow',
+  placeholder: 'Escreva aqui…',
+  modules: {
+    toolbar: {
+      container: [[{header: [2, 3, false]}], ['bold', 'italic'], [{list: 'ordered'}, {list: 'bullet'}], ['blockquote', 'link', 'image'], ['clean']],
+      handlers: { image: () => escolherArquivo(f => inserirImagem(f)) },
+    },
+  },
+});
+quill.on('text-change', () => { sujo = true; });
+
+function escolherArquivo(cb) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = () => inp.files[0] && cb(inp.files[0]);
+  inp.click();
+}
+
+async function subirImagem(blob) {
+  const fd = new FormData();
+  fd.append('arquivo', blob, blob.name || 'imagem');
+  return api('/imagens', {method: 'POST', body: fd});
+}
+
+async function inserirImagem(file) {
+  const range = quill.getSelection(true);
+  msg('info', 'Enviando imagem…');
+  try {
+    const r = await subirImagem(file);
+    quill.insertEmbed(range ? range.index : quill.getLength(), 'image', r.url, 'user');
+    quill.setSelection((range ? range.index : quill.getLength()) + 1);
+    limparMsg();
+  } catch (e) { msg('erro', 'Não consegui enviar a imagem: ' + e.message); }
+}
+
+// Imagem colada/arrastada: sobe para o servidor em vez de virar texto gigante no artigo.
+function capturarArquivos(ev, files) {
+  const imgs = [...(files || [])].filter(f => f.type.startsWith('image/'));
+  if (!imgs.length) return;
+  ev.preventDefault(); ev.stopPropagation();
+  imgs.forEach(inserirImagem);
+}
+quill.root.addEventListener('paste', e => capturarArquivos(e, e.clipboardData && e.clipboardData.files), true);
+quill.root.addEventListener('drop', e => capturarArquivos(e, e.dataTransfer && e.dataTransfer.files), true);
+
+function mostrarCapa() {
+  $('capaBox').innerHTML = capaId ? `<img src="/api/blog/img/${capaId}" alt="capa">` : '<div class="ph">sem capa</div>';
+  $('capaTirar').style.display = capaId ? 'inline-block' : 'none';
+  $('capaBtn').textContent = capaId ? 'Trocar imagem' : 'Escolher imagem';
+}
+$('capaBtn').onclick = () => escolherArquivo(async f => {
+  msg('info', 'Enviando capa…');
+  try { capaId = (await subirImagem(f)).id; sujo = true; mostrarCapa(); limparMsg(); }
+  catch (e) { msg('erro', 'Não consegui enviar a capa: ' + e.message); }
+});
+$('capaTirar').onclick = () => { capaId = null; sujo = true; mostrarCapa(); };
+
+$('resumo').addEventListener('input', () => { $('cnt').textContent = $('resumo').value.length; sujo = true; });
+['titulo','categoria','autor','slug'].forEach(id => $(id).addEventListener('input', () => { sujo = true; atualizarSlugPrev(); }));
+
+function slugify(s) {
+  return (s||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'').toLowerCase().slice(0,80).replace(/-+$/,'') || 'artigo';
+}
+function atualizarSlugPrev() {
+  $('slugPrev').textContent = (atual && atual.ja_publicado) ? atual.slug : slugify($('slug').value || $('titulo').value);
+}
+
+async function abrirEditor(id) {
+  limparMsg();
+  $('vLista').style.display = 'none'; $('vEditor').style.display = 'block';
+  if (id) {
+    atual = await api('/posts/' + id);
+  } else {
+    atual = {status: 'rascunho', ja_publicado: false, titulo: '', resumo: '', categoria: 'estoque', autor: 'joao', capa_id: null, conteudo: '', slug: ''};
+  }
+  $('titulo').value = atual.titulo;
+  $('resumo').value = atual.resumo; $('cnt').textContent = atual.resumo.length;
+  $('categoria').value = atual.categoria; $('autor').value = atual.autor;
+  $('slug').value = id ? atual.slug : '';
+  $('slug').disabled = !!atual.ja_publicado;
+  $('slugTrava').style.display = atual.ja_publicado ? 'block' : 'none';
+  capaId = atual.capa_id; mostrarCapa();
+  quill.setContents([]);
+  if (atual.conteudo) quill.clipboard.dangerouslyPasteHTML(atual.conteudo);
+  quill.history.clear();
+  atualizarBotoes(); atualizarSlugPrev();
+  sujo = false;
+  window.scrollTo(0, 0);
+}
+
+function atualizarBotoes() {
+  const noAr = atual.status === 'publicado';
+  $('stTag').innerHTML = atual.id ? `<span class="pill p-${atual.status}">${noAr ? 'No ar' : 'Rascunho'}</span>` : '';
+  $('publicar').textContent = noAr ? 'Atualizar no site' : 'Publicar';
+  $('salvar').style.display = noAr ? 'none' : 'inline-block';
+  $('despublicar').style.display = noAr ? 'inline-block' : 'none';
+  $('apagar').style.display = atual.id ? 'inline-block' : 'none';
+}
+
+// Imagens que entraram como data: (colagem de alguns programas) sobem antes de salvar;
+// imagens de outros sites não são aceitas pelo servidor — avisa em vez de sumir calado.
+async function prepararConteudo() {
+  const imgs = [...quill.root.querySelectorAll('img')];
+  let externas = 0;
+  for (const img of imgs) {
+    const src = img.getAttribute('src') || '';
+    if (src.startsWith('data:')) {
+      const blob = await (await fetch(src)).blob();
+      const r = await subirImagem(blob);
+      img.setAttribute('src', r.url);
+    } else if (!src.startsWith('/api/blog/img/')) {
+      externas++;
+    }
+  }
+  if (externas && !confirm(`${externas} imagem(ns) foram coladas de outro site e NÃO vão aparecer no artigo.\n` +
+      'Para mantê-las, salve a imagem no computador e use o botão de imagem.\n\nContinuar assim mesmo?')) {
+    throw new Error('cancelado');
+  }
+  return quill.getSemanticHTML();
+}
+
+async function gravar(status) {
+  limparMsg();
+  if ($('titulo').value.trim().length < 3) { msg('erro', 'Coloque um título.'); $('titulo').focus(); return; }
+  const botoes = document.querySelectorAll('.barra .btn');
+  botoes.forEach(b => b.disabled = true);
+  try {
+    const body = {
+      titulo: $('titulo').value, resumo: $('resumo').value,
+      categoria: $('categoria').value, autor: $('autor').value,
+      capa_id: capaId, slug: $('slug').value || null,
+      conteudo: await prepararConteudo(), status,
+    };
+    const r = atual.id
+      ? await api('/posts/' + atual.id, {method: 'PUT', body: JSON.stringify(body)})
+      : await api('/posts', {method: 'POST', body: JSON.stringify(body)});
+    atual = r.post; sujo = false;
+    $('slug').value = atual.slug; $('slug').disabled = atual.ja_publicado;
+    $('slugTrava').style.display = atual.ja_publicado ? 'block' : 'none';
+    atualizarBotoes(); atualizarSlugPrev();
+    const site = {
+      disparado: ' O site está sendo atualizado — em uns 5 minutos aparece lá.',
+      desligado: ' Atenção: a atualização automática do site não está ligada; avise o Gabriel.',
+      falhou: ' Mas o site NÃO conseguiu atualizar sozinho — avise o Gabriel.',
+      sem_mudanca: '',
+    }[r.site] || '';
+    const base = status === 'publicado' ? 'Publicado!' : (r.site !== 'sem_mudanca' ? 'Tirado do ar.' : 'Rascunho salvo.');
+    msg(r.site === 'falhou' || r.site === 'desligado' ? 'info' : 'ok', base + site);
+  } catch (e) {
+    if (e.message !== 'cancelado') msg('erro', e.message);
+  } finally {
+    botoes.forEach(b => b.disabled = false);
+  }
+}
+$('salvar').onclick = () => gravar('rascunho');
+$('publicar').onclick = () => {
+  if (atual.status !== 'publicado' && !confirm('Publicar este artigo no site agora?\n\nConfira antes: nada de nome de cliente, número de cliente ou dado que não pode sair.')) return;
+  gravar('publicado');
+};
+$('despublicar').onclick = () => { if (confirm('Tirar o artigo do site? Ele volta a ser rascunho.')) gravar('rascunho'); };
+$('apagar').onclick = async () => {
+  if (!confirm('Apagar este artigo de vez? Não tem como desfazer.')) return;
+  try {
+    const r = await api('/posts/' + atual.id, {method: 'DELETE'});
+    sujo = false; abrirLista();
+    if (r.site === 'falhou') alert('Apagado, mas o site não atualizou sozinho — avise o Gabriel.');
+  } catch (e) { msg('erro', e.message); }
+};
+
+// ── prévia ───────────────────────────────────────────────────
+$('previaBtn').onclick = () => {
+  const capa = capaId ? `<img class="capa-g" src="/api/blog/img/${capaId}" alt="">` : '';
+  $('previaArt').innerHTML = `
+    <div class="cat">${CAT[$('categoria').value]}</div>
+    <h1>${esc($('titulo').value) || '(sem título)'}</h1>
+    <p class="res">${esc($('resumo').value)}</p>
+    ${capa}
+    <div class="prosa">${quill.getSemanticHTML()}</div>`;
+  $('previa').style.display = 'block'; $('previa').scrollTop = 0;
+};
+$('fecharPrevia').onclick = () => { $('previa').style.display = 'none'; };
+
+window.addEventListener('beforeunload', e => { if (sujo) { e.preventDefault(); e.returnValue = ''; } });
+
+if (TOKEN) entrar(); else $('login').style.display = 'block';
+</script>
+</body>
+</html>

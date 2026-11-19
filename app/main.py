@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from . import models, scoring, relatorio_ia, prebrief, estoque_scoring, estoque_ia
 from .admin import router as admin_router
+from .blog import public_router as blog_router, admin_router as blog_admin_router
 from .config import config
 from .database import get_db, init_db, migrate_db
 from .schemas import SubmitBody, SubmitEstoqueBody
@@ -50,6 +51,8 @@ app.add_middleware(
 )
 
 app.include_router(admin_router)
+app.include_router(blog_router)
+app.include_router(blog_admin_router)
 
 
 @app.get("/api/diagnostico/health")
@@ -61,6 +64,12 @@ async def health():
 async def admin_atalho():
     """Atalho curto para o painel de admin."""
     return RedirectResponse(url="/api/diagnostico/admin")
+
+
+@app.get("/admin/blog")
+async def blog_admin_atalho():
+    """Endereço curto que o João usa para escrever no blog."""
+    return RedirectResponse(url="/api/blog/admin")
 
 
 @app.post("/api/diagnostico/submit")

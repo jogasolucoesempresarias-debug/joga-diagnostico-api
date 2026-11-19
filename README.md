@@ -127,3 +127,17 @@ Imagem `ghcr.io/jogasolucoesempresarias-debug/joga-diagnostico-api:latest` (GitH
 Stack Swarm/Traefik: roteia `Host(jogasolucoes.com.br) && (PathPrefix(/api) || PathPrefix(/admin))` →
 porta 8000. Mesma origem do site → sem CORS. Segredos ficam no `docker-compose.prod.yml` (gitignored,
 aplicado via Portainer). Banco: `CREATE DATABASE joga_diagnostico` no `postgres_postgres` (uma vez).
+
+## Blog (`/admin/blog`)
+Editor do blog do site (`app/blog.py` + `templates/blog_admin.html`, editor Quill via CDN).
+Mesmo `ADMIN_TOKEN` do painel de leads. Tabelas `blog_posts` e `blog_imagens` (imagem em bytea,
+reduzida para ≤ 1600 px WebP — fica no Postgres para entrar no backup).
+
+- Público: `GET /api/blog/posts` (publicados, com HTML) · `GET /api/blog/img/<id>` (cache imutável)
+- Admin (header `X-Admin-Token`): `/api/blog/admin/api/posts[/<id>]`, `/api/blog/admin/api/imagens`
+- HTML sanitizado com nh3 no salvamento; `<img>` só de `/api/blog/img/`.
+- Endereço (slug) trava depois da 1ª publicação.
+- Publicar / editar publicado / tirar do ar / apagar publicado → `repository_dispatch`
+  `blog-atualizado` no repo do site (`GITHUB_DISPATCH_TOKEN`: token fine-grained só do repo
+  `sitejoga`, permissão **Contents: Read and write**). Sem o token o admin avisa "não está ligada".
+- Testes: `tests/test_blog.py` (SQLite em memória, GitHub mockado).
