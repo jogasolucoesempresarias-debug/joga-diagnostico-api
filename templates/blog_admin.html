@@ -110,6 +110,8 @@
 <div id="login" style="display:none">
   <h1>Blog JOGA</h1>
   <p class="muted">Digite a senha do painel.</p>
+  <!-- usuário fixo: sem ele o navegador sobrescreve a senha salva de outro login do domínio -->
+  <input type="text" name="username" autocomplete="username" value="joga-painel" readonly tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px" />
   <input id="tok" type="password" placeholder="Senha" autocomplete="current-password" />
   <button class="btn amber" id="entrar" style="width:100%">Entrar</button>
   <p id="loginErro" style="color:var(--red)"></p>

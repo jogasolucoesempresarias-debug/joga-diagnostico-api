@@ -83,7 +83,9 @@
 <div id="login">
   <div class="brand" style="font-size:20px"><b>JOGA</b> · Diagnóstico</div>
   <p class="muted">Painel de leads — acesso restrito.</p>
-  <input id="tok" type="password" placeholder="Token de acesso" onkeydown="if(event.key==='Enter')entrar()" />
+  <!-- usuário fixo: sem ele o navegador sobrescreve a senha salva de outro login do domínio -->
+  <input type="text" name="username" autocomplete="username" value="joga-painel" readonly tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px" />
+  <input id="tok" type="password" autocomplete="current-password" placeholder="Token de acesso" onkeydown="if(event.key==='Enter')entrar()" />
   <button class="btn amber" style="width:100%" onclick="entrar()">Entrar</button>
   <p id="loginErr" class="muted" style="color:var(--red)"></p>
 </div>
