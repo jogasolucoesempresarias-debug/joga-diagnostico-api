@@ -24,11 +24,12 @@ from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
 from fastapi.responses import FileResponse, Response
 from PIL import Image as PILImage, ImageOps, UnidentifiedImageError
 from pydantic import BaseModel, Field
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from .config import config
 from .database import get_db
-from .models import Imagem, Post
+from .models import BlogAutor, BlogCategoria, BlogConfig, Imagem, Post
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +40,6 @@ ADMIN_HTML = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "templates", "blog_admin.html"
 )
 
-CATEGORIAS = {"estoque", "vendas", "clientes", "financeiro", "gestao"}
-AUTORES = {"joao", "gabriel"}
 STATUS = {"rascunho", "publicado"}
 
 IMG_PREFIXO = "/api/blog/img/"
@@ -200,6 +199,71 @@ def _admin(p: Post, com_conteudo: bool = False) -> dict:
 
 
 # ─────────────────────────────────────────────────────────────
+# Assuntos e autores — cadastrados no admin. A 1ª leitura semeia os que o blog nasceu com.
+# ─────────────────────────────────────────────────────────────
+
+CTA_DESTINOS = {
+    "geral": {"label": "Fazer o diagnóstico gratuito", "href": "/diagnostico/"},
+    "estoque": {"label": "Quero o diagnóstico do meu estoque", "href": "/solucoes/gestao-de-estoque/#questionario"},
+}
+
+CATEGORIAS_PADRAO = [
+    ("estoque", "Estoque", "Quer saber quanto do seu estoque está parado ou em risco? Responda 12 perguntas e veja o placar na hora.", "estoque"),
+    ("vendas", "Vendas", "Veja onde a sua gestão comercial pode render mais com os dados que você já tem.", "geral"),
+    ("clientes", "Clientes", "Descubra quantos clientes estão deixando de comprar — e quais recuperar primeiro.", "geral"),
+    ("financeiro", "Financeiro", "Veja se o seu resultado, a inadimplência e o caixa estão sob controle.", "geral"),
+    ("gestao", "Gestão", "Descubra onde a sua empresa pode melhorar com os dados que já possui.", "geral"),
+]
+
+AUTORES_PADRAO = [
+    ("joao", "João Victor", "Negócio · Comercial e Compras", "/socios/joao.jpeg",
+     "Mais de 15 anos nas áreas comercial e de compras — vendas, gestão de equipes, atacado distribuidor e "
+     "varejo supermercadista. Domínio de indicadores, rentabilidade, carteira de clientes, estoque e Business "
+     "Intelligence. Traduz o jogo do cliente em prioridade de negócio."),
+    ("gabriel", "Gabriel França", "Desenvolvedor · Sistemas, Dados e IA", "/socios/gabriel.jpeg",
+     "Desenvolvedor JOGA. Cria os sistemas de ponta a ponta — banco de dados, back-end, integrações entre ERPs "
+     "e planilhas, automações e agentes de Inteligência Artificial que rodam no dia a dia das empresas."),
+]
+
+
+def garantir_padroes(db: Session):
+    """Tabelas vazias (1º uso) recebem os assuntos/autores iniciais. Depois disso, quem manda é o admin."""
+    mudou = False
+    if db.query(BlogCategoria).count() == 0:
+        for i, (chave, nome, texto, destino) in enumerate(CATEGORIAS_PADRAO):
+            db.add(BlogCategoria(chave=chave, nome=nome, cta_texto=texto, cta_destino=destino, ordem=i))
+        mudou = True
+    if db.query(BlogAutor).count() == 0:
+        for i, (chave, nome, papel, foto, bio) in enumerate(AUTORES_PADRAO):
+            db.add(BlogAutor(chave=chave, nome=nome, papel=papel, foto=foto, bio=bio, ordem=i))
+        mudou = True
+    if mudou:
+        db.commit()
+
+
+def _destino(chave: str) -> dict:
+    return CTA_DESTINOS.get(chave, CTA_DESTINOS["geral"])
+
+
+def _categorias(db: Session) -> list[dict]:
+    garantir_padroes(db)
+    rows = db.query(BlogCategoria).order_by(BlogCategoria.ordem, BlogCategoria.nome).all()
+    return [{
+        "chave": c.chave, "nome": c.nome, "cta_texto": c.cta_texto or "",
+        "cta_destino": c.cta_destino if c.cta_destino in CTA_DESTINOS else "geral",
+        "cta_label": _destino(c.cta_destino)["label"],
+        "cta_href": _destino(c.cta_destino)["href"],
+    } for c in rows]
+
+
+def _autores(db: Session) -> list[dict]:
+    garantir_padroes(db)
+    rows = db.query(BlogAutor).order_by(BlogAutor.ordem, BlogAutor.nome).all()
+    return [{"chave": a.chave, "nome": a.nome, "papel": a.papel or "", "bio": a.bio or "", "foto": a.foto or ""}
+            for a in rows]
+
+
+# ─────────────────────────────────────────────────────────────
 # Público
 # ─────────────────────────────────────────────────────────────
 
@@ -212,6 +276,39 @@ def posts_publicados(db: Session = Depends(get_db)):
         .all()
     )
     return [_publico(p) for p in rows]
+
+
+# Cabeçalho da página /blog — o João edita no admin. Padrão = o texto com que o blog nasceu.
+PAGINA_PADRAO = {
+    "titulo": "Gestão com dados, na prática.",
+    "destaque": "na prática",
+    "subtitulo": (
+        "Estoque, vendas, carteira de clientes e resultado — o que olhar, como medir e o que "
+        "fazer com o número. Escrito por quem já esteve do outro lado da mesa."
+    ),
+}
+PAGINA_MAX = {"titulo": 120, "destaque": 60, "subtitulo": 300}
+
+
+def ler_pagina(db: Session) -> dict:
+    salvos = {c.chave: c.valor for c in db.query(BlogConfig).filter(BlogConfig.chave.in_(PAGINA_PADRAO)).all()}
+    return {k: (salvos.get(k) or v) for k, v in PAGINA_PADRAO.items()}
+
+
+@public_router.get("/pagina")
+def pagina_publica(db: Session = Depends(get_db)):
+    return ler_pagina(db)
+
+
+@public_router.get("/site")
+def dados_do_site(db: Session = Depends(get_db)):
+    """Tudo que o build do site precisa numa leitura só."""
+    return {
+        "pagina": ler_pagina(db),
+        "categorias": _categorias(db),
+        "autores": _autores(db),
+        "posts": posts_publicados(db),
+    }
 
 
 @public_router.get("/img/{img_id}")
@@ -244,10 +341,11 @@ class PostBody(BaseModel):
     slug: str | None = Field(None, max_length=160)
 
 
-def _validar(body: PostBody):
-    if body.categoria not in CATEGORIAS:
-        raise HTTPException(422, "Categoria inválida")
-    if body.autor not in AUTORES:
+def _validar(body: PostBody, db: Session):
+    garantir_padroes(db)
+    if not db.get(BlogCategoria, body.categoria):
+        raise HTTPException(422, "Assunto inválido")
+    if not db.get(BlogAutor, body.autor):
         raise HTTPException(422, "Autor inválido")
     if body.status not in STATUS:
         raise HTTPException(422, "Status inválido")
@@ -321,7 +419,7 @@ def _salvar_e_rebuild(db: Session, p: Post, status_novo: str, estava_no_ar: bool
 
 @admin_router.post("/api/posts", dependencies=[Depends(_auth)])
 def criar(body: PostBody, db: Session = Depends(get_db)):
-    _validar(body)
+    _validar(body, db)
     p = Post(slug="tmp-" + uuid.uuid4().hex[:12], titulo=body.titulo)
     _aplicar(db, p, body)
     db.add(p)
@@ -331,7 +429,7 @@ def criar(body: PostBody, db: Session = Depends(get_db)):
 
 @admin_router.put("/api/posts/{post_id}", dependencies=[Depends(_auth)])
 def atualizar(post_id: int, body: PostBody, db: Session = Depends(get_db)):
-    _validar(body)
+    _validar(body, db)
     p = db.get(Post, post_id)
     if not p:
         raise HTTPException(404, "Artigo não encontrado")
@@ -351,6 +449,153 @@ def apagar(post_id: int, db: Session = Depends(get_db)):
     db.commit()
     site = disparar_rebuild(f"apagado: {slug}") if estava_no_ar else "sem_mudanca"
     return {"ok": True, "site": site}
+
+
+class PaginaBody(BaseModel):
+    titulo: str = Field(..., min_length=3, max_length=PAGINA_MAX["titulo"])
+    destaque: str = Field("", max_length=PAGINA_MAX["destaque"])
+    subtitulo: str = Field("", max_length=PAGINA_MAX["subtitulo"])
+
+
+@admin_router.get("/api/pagina", dependencies=[Depends(_auth)])
+def pagina_admin(db: Session = Depends(get_db)):
+    return {"pagina": ler_pagina(db), "padrao": PAGINA_PADRAO}
+
+
+@admin_router.put("/api/pagina", dependencies=[Depends(_auth)])
+def salvar_pagina(body: PaginaBody, db: Session = Depends(get_db)):
+    novo = {k: v.strip() for k, v in body.model_dump().items()}
+    if novo["destaque"] and novo["destaque"] not in novo["titulo"]:
+        raise HTTPException(422, "A parte em laranja precisa ser um pedaço do título, escrita igual.")
+    for chave, valor in novo.items():
+        reg = db.get(BlogConfig, chave)
+        if reg:
+            reg.valor = valor
+        else:
+            db.add(BlogConfig(chave=chave, valor=valor))
+    db.commit()
+    return {"pagina": ler_pagina(db), "site": disparar_rebuild("cabeçalho do blog")}
+
+
+@admin_router.get("/api/cadastros", dependencies=[Depends(_auth)])
+def cadastros(db: Session = Depends(get_db)):
+    """Assuntos e autores (com quantos artigos usam cada um) + os destinos de CTA possíveis."""
+    uso_cat = dict(db.query(Post.categoria, func.count(Post.id)).group_by(Post.categoria).all())
+    uso_aut = dict(db.query(Post.autor, func.count(Post.id)).group_by(Post.autor).all())
+    return {
+        "categorias": [{**c, "artigos": uso_cat.get(c["chave"], 0)} for c in _categorias(db)],
+        "autores": [{**a, "artigos": uso_aut.get(a["chave"], 0)} for a in _autores(db)],
+        "destinos": {k: v["label"] for k, v in CTA_DESTINOS.items()},
+    }
+
+
+class CategoriaBody(BaseModel):
+    nome: str = Field(..., min_length=2, max_length=60)
+    cta_texto: str = Field("", max_length=300)
+    cta_destino: str = "geral"
+
+
+class AutorBody(BaseModel):
+    nome: str = Field(..., min_length=2, max_length=80)
+    papel: str = Field("", max_length=120)
+    bio: str = Field("", max_length=1000)
+    foto: str = Field("", max_length=200)
+
+
+def _chave_nova(db: Session, modelo, nome: str) -> str:
+    base = slugify(nome, 40)
+    chave, n = base, 2
+    while db.get(modelo, chave):
+        chave, n = f"{base}-{n}", n + 1
+    return chave
+
+
+def _validar_foto(foto: str) -> str:
+    foto = (foto or "").strip()
+    if foto and not (re.fullmatch(r"/api/blog/img/[0-9a-f]{32}", foto) or re.fullmatch(r"/socios/[\w.\- ]+", foto)):
+        raise HTTPException(422, "Foto inválida")
+    return foto
+
+
+def _rebuild_se_publicado(db: Session, filtro, motivo: str) -> str:
+    """Mudar assunto/autor só mexe no site se algum artigo publicado usa ele."""
+    if db.query(Post).filter(filtro, Post.status == "publicado").count():
+        return disparar_rebuild(motivo)
+    return "sem_mudanca"
+
+
+@admin_router.post("/api/categorias", dependencies=[Depends(_auth)])
+def criar_categoria(body: CategoriaBody, db: Session = Depends(get_db)):
+    garantir_padroes(db)
+    if body.cta_destino not in CTA_DESTINOS:
+        raise HTTPException(422, "Destino inválido")
+    c = BlogCategoria(chave=_chave_nova(db, BlogCategoria, body.nome), nome=body.nome.strip(),
+                      cta_texto=body.cta_texto.strip(), cta_destino=body.cta_destino)
+    db.add(c)
+    db.commit()
+    return {"chave": c.chave, "site": "sem_mudanca"}
+
+
+@admin_router.put("/api/categorias/{chave}", dependencies=[Depends(_auth)])
+def editar_categoria(chave: str, body: CategoriaBody, db: Session = Depends(get_db)):
+    c = db.get(BlogCategoria, chave)
+    if not c:
+        raise HTTPException(404, "Assunto não encontrado")
+    if body.cta_destino not in CTA_DESTINOS:
+        raise HTTPException(422, "Destino inválido")
+    c.nome, c.cta_texto, c.cta_destino = body.nome.strip(), body.cta_texto.strip(), body.cta_destino
+    db.commit()
+    return {"chave": c.chave, "site": _rebuild_se_publicado(db, Post.categoria == chave, f"assunto: {chave}")}
+
+
+@admin_router.delete("/api/categorias/{chave}", dependencies=[Depends(_auth)])
+def apagar_categoria(chave: str, db: Session = Depends(get_db)):
+    c = db.get(BlogCategoria, chave)
+    if not c:
+        raise HTTPException(404, "Assunto não encontrado")
+    n = db.query(Post).filter(Post.categoria == chave).count()
+    if n:
+        raise HTTPException(409, f"Não dá para apagar: {n} artigo(s) usam este assunto. Troque o assunto deles antes.")
+    if db.query(BlogCategoria).count() <= 1:
+        raise HTTPException(409, "Precisa existir pelo menos um assunto.")
+    db.delete(c)
+    db.commit()
+    return {"ok": True, "site": "sem_mudanca"}
+
+
+@admin_router.post("/api/autores", dependencies=[Depends(_auth)])
+def criar_autor(body: AutorBody, db: Session = Depends(get_db)):
+    garantir_padroes(db)
+    a = BlogAutor(chave=_chave_nova(db, BlogAutor, body.nome), nome=body.nome.strip(), papel=body.papel.strip(),
+                  bio=body.bio.strip(), foto=_validar_foto(body.foto))
+    db.add(a)
+    db.commit()
+    return {"chave": a.chave, "site": "sem_mudanca"}
+
+
+@admin_router.put("/api/autores/{chave}", dependencies=[Depends(_auth)])
+def editar_autor(chave: str, body: AutorBody, db: Session = Depends(get_db)):
+    a = db.get(BlogAutor, chave)
+    if not a:
+        raise HTTPException(404, "Autor não encontrado")
+    a.nome, a.papel, a.bio, a.foto = body.nome.strip(), body.papel.strip(), body.bio.strip(), _validar_foto(body.foto)
+    db.commit()
+    return {"chave": a.chave, "site": _rebuild_se_publicado(db, Post.autor == chave, f"autor: {chave}")}
+
+
+@admin_router.delete("/api/autores/{chave}", dependencies=[Depends(_auth)])
+def apagar_autor(chave: str, db: Session = Depends(get_db)):
+    a = db.get(BlogAutor, chave)
+    if not a:
+        raise HTTPException(404, "Autor não encontrado")
+    n = db.query(Post).filter(Post.autor == chave).count()
+    if n:
+        raise HTTPException(409, f"Não dá para apagar: {n} artigo(s) são deste autor. Troque o autor deles antes.")
+    if db.query(BlogAutor).count() <= 1:
+        raise HTTPException(409, "Precisa existir pelo menos um autor.")
+    db.delete(a)
+    db.commit()
+    return {"ok": True, "site": "sem_mudanca"}
 
 
 @admin_router.post("/api/imagens", dependencies=[Depends(_auth)])

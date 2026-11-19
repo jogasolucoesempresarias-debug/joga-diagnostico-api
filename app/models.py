@@ -133,3 +133,35 @@ class Imagem(Base):
     largura = Column(Integer)
     altura = Column(Integer)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class BlogConfig(Base):
+    """Textos editáveis da página /blog (cabeçalho). Chave → valor; ausente = padrão do código."""
+    __tablename__ = "blog_config"
+
+    chave = Column(String(40), primary_key=True)
+    valor = Column(Text, nullable=False, default="")
+    atualizado_em = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class BlogCategoria(Base):
+    """Assunto do blog (filtro + chamada do fim do artigo). O João cadastra no admin."""
+    __tablename__ = "blog_categorias"
+
+    chave = Column(String(40), primary_key=True)          # vai no post (Post.categoria)
+    nome = Column(String(60), nullable=False)
+    cta_texto = Column(String(300), default="")
+    cta_destino = Column(String(20), default="geral")     # 'geral' | 'estoque'
+    ordem = Column(Integer, default=100)
+
+
+class BlogAutor(Base):
+    """Autor do blog. `foto` é um caminho: /socios/... (arquivo do site) ou /api/blog/img/<id>."""
+    __tablename__ = "blog_autores"
+
+    chave = Column(String(40), primary_key=True)          # vai no post (Post.autor)
+    nome = Column(String(80), nullable=False)
+    papel = Column(String(120), default="")
+    bio = Column(Text, default="")
+    foto = Column(String(200), default="")
+    ordem = Column(Integer, default=100)

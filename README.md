@@ -133,7 +133,11 @@ Editor do blog do site (`app/blog.py` + `templates/blog_admin.html`, editor Quil
 Mesmo `ADMIN_TOKEN` do painel de leads. Tabelas `blog_posts` e `blog_imagens` (imagem em bytea,
 reduzida para ≤ 1600 px WebP — fica no Postgres para entrar no backup).
 
-- Público: `GET /api/blog/posts` (publicados, com HTML) · `GET /api/blog/img/<id>` (cache imutável)
+- Público: `GET /api/blog/site` (o que o build do site lê: cabeçalho + assuntos + autores + posts publicados)
+  · `GET /api/blog/posts` · `GET /api/blog/pagina` · `GET /api/blog/img/<id>` (cache imutável)
+- O João cadastra **assuntos** (nome, frase e destino do botão do fim do artigo), **autores** (nome, cargo,
+  bio, foto) e edita o **cabeçalho** da página /blog. Tabelas `blog_categorias`, `blog_autores`,
+  `blog_config`; vazias no 1º uso recebem os padrões (`garantir_padroes`). Assunto/autor em uso não apaga.
 - Admin (header `X-Admin-Token`): `/api/blog/admin/api/posts[/<id>]`, `/api/blog/admin/api/imagens`
 - HTML sanitizado com nh3 no salvamento; `<img>` só de `/api/blog/img/`.
 - Endereço (slug) trava depois da 1ª publicação.

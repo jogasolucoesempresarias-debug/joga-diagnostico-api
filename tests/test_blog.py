@@ -15,7 +15,7 @@ from sqlalchemy.pool import StaticPool
 from app import blog, main
 from app.config import config
 from app.database import get_db
-from app.models import Imagem, Post
+from app.models import BlogAutor, BlogCategoria, BlogConfig, Imagem, Post
 
 TOKEN = "tok-teste"
 H = {"X-Admin-Token": TOKEN}
@@ -27,8 +27,8 @@ def client(monkeypatch):
     engine = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )
-    Post.__table__.create(engine)
-    Imagem.__table__.create(engine)
+    for m in (Post, Imagem, BlogConfig, BlogCategoria, BlogAutor):
+        m.__table__.create(engine)
     Sess = sessionmaker(bind=engine)
 
     def _db():
@@ -175,3 +175,52 @@ def test_atalho_admin_blog(client):
     r = client.get("/admin/blog", follow_redirects=False)
     assert r.status_code == 307 and r.headers["location"] == "/api/blog/admin"
     assert "Blog JOGA" in client.get("/api/blog/admin").text
+
+
+# ── cabeçalho, assuntos e autores (o João cadastra) ──────────
+
+def test_cabecalho_padrao_e_edicao(client):
+    assert client.get("/api/blog/pagina").json()["destaque"] == "na prática"
+    r = client.put("/api/blog/admin/api/pagina", headers=H, json={
+        "titulo": "Dados que viram decisão.", "destaque": "decisão", "subtitulo": "Artigos da JOGA."})
+    assert r.status_code == 200 and r.json()["site"] == "disparado"
+    assert client.get("/api/blog/site").json()["pagina"]["titulo"] == "Dados que viram decisão."
+    # destaque precisa estar dentro do título
+    r = client.put("/api/blog/admin/api/pagina", headers=H, json={"titulo": "Outro título", "destaque": "xyz"})
+    assert r.status_code == 422
+
+
+def test_assuntos_padrao_cadastro_e_uso(client):
+    cad = client.get("/api/blog/admin/api/cadastros", headers=H).json()
+    assert [c["chave"] for c in cad["categorias"]][:2] == ["estoque", "vendas"]
+    assert {a["chave"] for a in cad["autores"]} == {"joao", "gabriel"}
+
+    nova = client.post("/api/blog/admin/api/categorias", headers=H, json={
+        "nome": "Logística", "cta_texto": "Veja seus fretes.", "cta_destino": "geral"}).json()
+    assert nova["chave"] == "logistica"
+    # post com assunto novo é aceito; assunto inexistente não
+    assert client.post("/api/blog/admin/api/posts", headers=H, json={"titulo": "Frete", "categoria": "logistica"}).status_code == 200
+    assert client.post("/api/blog/admin/api/posts", headers=H, json={"titulo": "X", "categoria": "nao-existe"}).status_code == 422
+    # em uso → não apaga
+    r = client.delete("/api/blog/admin/api/categorias/logistica", headers=H)
+    assert r.status_code == 409 and "1 artigo" in r.json()["detail"]
+    # sem uso → apaga
+    assert client.delete("/api/blog/admin/api/categorias/financeiro", headers=H).status_code == 200
+    site = client.get("/api/blog/site").json()
+    cats = {c["chave"]: c for c in site["categorias"]}
+    assert "financeiro" not in cats
+    assert cats["estoque"]["cta_href"].endswith("#questionario")
+
+
+def test_autor_novo_com_foto_e_validacao(client):
+    foto = client.post("/api/blog/admin/api/imagens", headers=H,
+                       files={"arquivo": ("f.png", _png(400, 400), "image/png")}).json()["url"]
+    r = client.post("/api/blog/admin/api/autores", headers=H, json={
+        "nome": "Fulana Teste", "papel": "Financeiro", "bio": "Bio.", "foto": foto})
+    assert r.json()["chave"] == "fulana-teste"
+    assert client.post("/api/blog/admin/api/posts", headers=H, json={"titulo": "Caixa", "autor": "fulana-teste"}).status_code == 200
+    # foto de fora não entra
+    r = client.post("/api/blog/admin/api/autores", headers=H, json={"nome": "Y", "foto": "https://x.com/a.png"})
+    assert r.status_code == 422
+    autores = {a["chave"]: a for a in client.get("/api/blog/site").json()["autores"]}
+    assert autores["fulana-teste"]["foto"] == foto

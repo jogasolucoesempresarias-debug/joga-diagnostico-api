@@ -90,6 +90,19 @@
   .prosa img{max-width:100%;border-radius:12px;margin:12px 0}
   .prosa blockquote{border-left:3px solid var(--amber);margin:24px 0;padding:4px 0 4px 18px;color:var(--cream);font-size:19px}
   .prosa a{color:var(--amber)}
+  .abas{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
+  .abas button{background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);padding:10px 14px;font:600 14px system-ui,Segoe UI,Roboto,sans-serif;cursor:pointer;white-space:nowrap}
+  .abas button.on{color:var(--cream);border-bottom-color:var(--amber)}
+  .cab{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .cab h2{margin:0}
+  .foto{width:40px;height:40px;border-radius:50%;object-fit:cover;object-position:top;background:var(--surface2);flex:none}
+  .msgx{margin-top:14px;padding:10px 14px;border-radius:10px;display:none;border:1px solid var(--line)}
+  .msgx.ok{display:block;color:var(--green);border-color:#5cd08a40}
+  .msgx.erro{display:block;color:var(--red);border-color:#f7777740}
+  .msgx.info{display:block;color:var(--amber);border-color:#f4a52a40}
+  #modal{position:fixed;inset:0;background:#000a;z-index:40;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:5vh 14px}
+  #modal .card{width:100%;max-width:560px;padding:22px 22px 18px}
+  #modal h3{margin:0 0 4px}
 </style>
 </head>
 <body>
@@ -111,6 +124,16 @@
     </div>
   </header>
 
+  <nav class="abas" id="abas">
+    <button data-aba="vLista" class="on">Artigos</button>
+    <button data-aba="vCadastros">Assuntos e autores</button>
+    <button data-aba="vCabecalho">Cabeçalho do blog</button>
+  </nav>
+  <p class="muted small" id="avisoRebuild" style="display:none;margin:0 0 16px">
+    ⚠️ A atualização automática do site ainda não está ligada: o que você salvar fica guardado,
+    mas só aparece no site no próximo deploy. Avise o Gabriel.
+  </p>
+
   <!-- LISTA -->
   <section id="vLista">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px">
@@ -118,10 +141,39 @@
       <button class="btn amber" id="novo">+ Novo artigo</button>
     </div>
     <div class="card lista" id="lista"></div>
-    <p class="muted small" id="avisoRebuild" style="display:none;margin-top:14px">
-      ⚠️ A atualização automática do site ainda não está ligada: o artigo publicado fica salvo,
-      mas só aparece no site no próximo deploy. Avise o Gabriel.
-    </p>
+  </section>
+
+  <!-- ASSUNTOS E AUTORES -->
+  <section id="vCadastros" style="display:none">
+    <div class="cab"><h2>Assuntos</h2><button class="btn amber" id="novaCat">+ Novo assunto</button></div>
+    <p class="muted small">O assunto vira filtro no blog e decide a chamada do fim do artigo.</p>
+    <div class="card lista" id="listaCat"></div>
+
+    <div class="cab" style="margin-top:34px"><h2>Autores</h2><button class="btn amber" id="novoAut">+ Novo autor</button></div>
+    <p class="muted small">Aparecem no topo e no fim de cada artigo.</p>
+    <div class="card lista" id="listaAut"></div>
+  </section>
+
+  <!-- CABEÇALHO -->
+  <section id="vCabecalho" style="display:none">
+    <h2 style="margin:0 0 4px">Cabeçalho do blog</h2>
+    <p class="muted small" style="margin:0">O título grande e o texto que aparecem no topo de jogasolucoes.com.br/blog.</p>
+    <label for="cabTitulo">Título <span class="hint">até 120 letras</span></label>
+    <input id="cabTitulo" maxlength="120" />
+    <label for="cabDestaque">Parte em laranja <span class="hint">— copie um pedaço do título, escrito igual. Pode deixar vazio.</span></label>
+    <input id="cabDestaque" maxlength="60" />
+    <label for="cabSub">Texto embaixo <span class="hint">até 300 letras</span></label>
+    <textarea id="cabSub" rows="3" maxlength="300"></textarea>
+    <p class="muted small" style="margin:18px 0 6px">Como vai ficar:</p>
+    <div class="card" style="padding:26px 24px">
+      <div id="cabPrevT" style="font-size:clamp(26px,4.5vw,40px);font-weight:700;line-height:1.1"></div>
+      <p id="cabPrevS" class="muted" style="font-size:17px;margin:12px 0 0"></p>
+    </div>
+    <div id="msgCab" class="msgx"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn amber" id="cabSalvar">Salvar cabeçalho</button>
+      <button class="btn" id="cabPadrao">Voltar ao texto original</button>
+    </div>
   </section>
 
   <!-- EDITOR -->
@@ -138,20 +190,11 @@
     <div class="row">
       <div>
         <label for="categoria">Assunto</label>
-        <select id="categoria">
-          <option value="estoque">Estoque</option>
-          <option value="vendas">Vendas</option>
-          <option value="clientes">Clientes</option>
-          <option value="financeiro">Financeiro</option>
-          <option value="gestao">Gestão</option>
-        </select>
+        <select id="categoria"></select>
       </div>
       <div>
         <label for="autor">Autor</label>
-        <select id="autor">
-          <option value="joao">João Victor</option>
-          <option value="gabriel">Gabriel França</option>
-        </select>
+        <select id="autor"></select>
       </div>
     </div>
 
@@ -190,6 +233,20 @@
   </section>
 </div>
 
+<div id="modal">
+  <div class="card">
+    <h3 id="mTitulo"></h3>
+    <div id="mCampos"></div>
+    <div id="msgModal" class="msgx"></div>
+    <div style="display:flex;gap:10px;margin-top:18px;align-items:center">
+      <button class="btn danger" id="mApagar">Apagar</button>
+      <span style="flex:1"></span>
+      <button class="btn" id="mCancelar">Cancelar</button>
+      <button class="btn amber" id="mSalvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div id="previa">
   <button class="btn amber fechar" id="fecharPrevia">Fechar prévia</button>
   <article class="art" id="previaArt"></article>
@@ -198,7 +255,8 @@
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
 <script>
 const $ = (id) => document.getElementById(id);
-const CAT = {estoque:'Estoque',vendas:'Vendas',clientes:'Clientes',financeiro:'Financeiro',gestao:'Gestão'};
+let CAT = {};          // chave → nome do assunto (vem do servidor)
+let CAD = {categorias: [], autores: [], destinos: {}};
 let TOKEN = '';
 try { TOKEN = localStorage.getItem('joga_blog_token') || ''; } catch (e) {}
 let atual = null;       // post em edição (objeto do servidor) ou {} para novo
@@ -227,6 +285,7 @@ async function entrar() {
     const st = await api('/status');
     $('login').style.display = 'none'; $('app').style.display = 'block';
     $('avisoRebuild').style.display = st.rebuild_configurado ? 'none' : 'block';
+    await carregarCadastros();
     abrirLista();
   } catch (e) {
     $('app').style.display = 'none'; $('login').style.display = 'block';
@@ -248,11 +307,160 @@ $('entrar').onclick = async () => {
 $('tok').addEventListener('keydown', e => { if (e.key === 'Enter') $('entrar').click(); });
 $('sair').onclick = sair;
 
+// ── abas ─────────────────────────────────────────────────────
+const VISTAS = ['vLista', 'vCadastros', 'vCabecalho', 'vEditor'];
+function mostrar(id) {
+  if (sujo && $('vEditor').style.display !== 'none' && id !== 'vEditor' &&
+      !confirm('Há alterações não salvas no artigo. Sair mesmo assim?')) return false;
+  if (id !== 'vEditor') sujo = false;
+  VISTAS.forEach(v => { $(v).style.display = v === id ? 'block' : 'none'; });
+  document.querySelectorAll('#abas button').forEach(b => b.classList.toggle('on', b.dataset.aba === id || (id === 'vEditor' && b.dataset.aba === 'vLista')));
+  window.scrollTo(0, 0);
+  return true;
+}
+document.querySelectorAll('#abas button').forEach(b => b.onclick = () => {
+  const id = b.dataset.aba;
+  if (id === 'vLista') abrirLista();
+  else if (id === 'vCadastros') abrirCadastros();
+  else abrirCabecalho();
+});
+
+// ── assuntos e autores ───────────────────────────────────────
+async function carregarCadastros() {
+  CAD = await api('/cadastros');
+  CAT = Object.fromEntries(CAD.categorias.map(c => [c.chave, c.nome]));
+  const valCat = $('categoria').value, valAut = $('autor').value;
+  $('categoria').innerHTML = CAD.categorias.map(c => `<option value="${esc(c.chave)}">${esc(c.nome)}</option>`).join('');
+  $('autor').innerHTML = CAD.autores.map(a => `<option value="${esc(a.chave)}">${esc(a.nome)}</option>`).join('');
+  if (valCat) $('categoria').value = valCat;
+  if (valAut) $('autor').value = valAut;
+}
+
+function nArtigos(n) { return n ? `${n} artigo${n > 1 ? 's' : ''}` : 'nenhum artigo'; }
+
+async function abrirCadastros() {
+  if (!mostrar('vCadastros')) return;
+  await carregarCadastros();
+  $('listaCat').innerHTML = CAD.categorias.map(c => `
+    <div class="item" data-chave="${esc(c.chave)}">
+      <div class="t"><b>${esc(c.nome)}</b>
+        <span class="muted small">${nArtigos(c.artigos)} · botão: ${esc(c.cta_label)}</span></div>
+    </div>`).join('');
+  $('listaAut').innerHTML = CAD.autores.map(a => `
+    <div class="item" data-chave="${esc(a.chave)}">
+      ${a.foto ? `<img class="foto" src="${esc(a.foto)}" alt="">` : '<div class="foto"></div>'}
+      <div class="t"><b>${esc(a.nome)}</b><span class="muted small">${esc(a.papel)} · ${nArtigos(a.artigos)}</span></div>
+    </div>`).join('');
+  $('listaCat').querySelectorAll('.item').forEach(it => it.onclick = () => formCategoria(CAD.categorias.find(c => c.chave === it.dataset.chave)));
+  $('listaAut').querySelectorAll('.item').forEach(it => it.onclick = () => formAutor(CAD.autores.find(a => a.chave === it.dataset.chave)));
+}
+$('novaCat').onclick = () => formCategoria(null);
+$('novoAut').onclick = () => formAutor(null);
+
+let modalSalvar = null, modalApagar = null;
+function abrirModal(titulo, html, salvar, apagar) {
+  $('mTitulo').textContent = titulo;
+  $('mCampos').innerHTML = html;
+  $('msgModal').className = 'msgx'; $('msgModal').textContent = '';
+  modalSalvar = salvar; modalApagar = apagar;
+  $('mApagar').style.display = apagar ? 'inline-block' : 'none';
+  $('modal').style.display = 'flex';
+}
+function fecharModal() { $('modal').style.display = 'none'; }
+function msgModal(tipo, t) { $('msgModal').className = 'msgx ' + tipo; $('msgModal').textContent = t; }
+$('mCancelar').onclick = fecharModal;
+$('mSalvar').onclick = async () => {
+  try { const r = await modalSalvar(); fecharModal(); avisoSite(r && r.site); abrirCadastros(); }
+  catch (e) { msgModal('erro', e.message); }
+};
+$('mApagar').onclick = async () => {
+  if (!confirm('Apagar de vez?')) return;
+  try { await modalApagar(); fecharModal(); abrirCadastros(); }
+  catch (e) { msgModal('erro', e.message); }
+};
+
+function avisoSite(site) {
+  if (site === 'desligado' || site === 'falhou') alert('Salvo. O site não atualizou sozinho — avise o Gabriel.');
+}
+
+function formCategoria(c) {
+  const destinos = Object.entries(CAD.destinos).map(([k, v]) =>
+    `<option value="${k}" ${c && c.cta_destino === k ? 'selected' : ''}>${esc(v)}</option>`).join('');
+  abrirModal(c ? 'Editar assunto' : 'Novo assunto', `
+    <label for="fNome">Nome</label><input id="fNome" maxlength="60" value="${esc(c ? c.nome : '')}" placeholder="Ex.: Logística" />
+    <label for="fTexto">Frase da chamada no fim do artigo <span class="hint">— convida o leitor a fazer o diagnóstico</span></label>
+    <textarea id="fTexto" rows="3" maxlength="300">${esc(c ? c.cta_texto : '')}</textarea>
+    <label for="fDest">Botão leva para</label><select id="fDest">${destinos}</select>
+    ${c ? `<p class="muted small">Usado em ${nArtigos(c.artigos)}.</p>` : ''}`,
+    () => api(c ? '/categorias/' + encodeURIComponent(c.chave) : '/categorias', {
+      method: c ? 'PUT' : 'POST',
+      body: JSON.stringify({nome: $('fNome').value, cta_texto: $('fTexto').value, cta_destino: $('fDest').value}),
+    }),
+    c ? () => api('/categorias/' + encodeURIComponent(c.chave), {method: 'DELETE'}) : null);
+}
+
+function formAutor(a) {
+  let foto = a ? a.foto : '';
+  abrirModal(a ? 'Editar autor' : 'Novo autor', `
+    <label for="fNome">Nome</label><input id="fNome" maxlength="80" value="${esc(a ? a.nome : '')}" />
+    <label for="fPapel">Cargo / área <span class="hint">— aparece embaixo do nome</span></label>
+    <input id="fPapel" maxlength="120" value="${esc(a ? a.papel : '')}" placeholder="Ex.: Financeiro · Controladoria" />
+    <label for="fBio">Mini bio <span class="hint">— aparece no fim do artigo</span></label>
+    <textarea id="fBio" rows="4" maxlength="1000">${esc(a ? a.bio : '')}</textarea>
+    <label>Foto</label>
+    <div style="display:flex;gap:12px;align-items:center">
+      <span id="fFotoBox">${foto ? `<img class="foto" style="width:56px;height:56px" src="${esc(foto)}" alt="">` : '<div class="foto" style="width:56px;height:56px"></div>'}</span>
+      <button class="btn" id="fFotoBtn" type="button">Escolher foto</button>
+    </div>
+    ${a ? `<p class="muted small">Autor de ${nArtigos(a.artigos)}.</p>` : ''}`,
+    () => api(a ? '/autores/' + encodeURIComponent(a.chave) : '/autores', {
+      method: a ? 'PUT' : 'POST',
+      body: JSON.stringify({nome: $('fNome').value, papel: $('fPapel').value, bio: $('fBio').value, foto}),
+    }),
+    a ? () => api('/autores/' + encodeURIComponent(a.chave), {method: 'DELETE'}) : null);
+  $('fFotoBtn').onclick = () => escolherArquivo(async f => {
+    msgModal('info', 'Enviando foto…');
+    try {
+      foto = (await subirImagem(f)).url;
+      $('fFotoBox').innerHTML = `<img class="foto" style="width:56px;height:56px" src="${foto}" alt="">`;
+      msgModal('ok', 'Foto pronta. Clique em Salvar.');
+    } catch (e) { msgModal('erro', 'Não consegui enviar a foto: ' + e.message); }
+  });
+}
+
+// ── cabeçalho do blog ────────────────────────────────────────
+let CAB_PADRAO = null;
+function previaCab() {
+  const t = $('cabTitulo').value, d = $('cabDestaque').value;
+  const i = d ? t.indexOf(d) : -1;
+  $('cabPrevT').innerHTML = i >= 0
+    ? esc(t.slice(0, i)) + `<span style="color:var(--amber)">${esc(d)}</span>` + esc(t.slice(i + d.length))
+    : esc(t);
+  $('cabPrevS').textContent = $('cabSub').value;
+}
+['cabTitulo', 'cabDestaque', 'cabSub'].forEach(id => $(id).addEventListener('input', previaCab));
+function preencherCab(p) { $('cabTitulo').value = p.titulo; $('cabDestaque').value = p.destaque; $('cabSub').value = p.subtitulo; previaCab(); }
+async function abrirCabecalho() {
+  if (!mostrar('vCabecalho')) return;
+  const r = await api('/pagina');
+  CAB_PADRAO = r.padrao;
+  preencherCab(r.pagina);
+  $('msgCab').className = 'msgx';
+}
+$('cabPadrao').onclick = () => { if (CAB_PADRAO) preencherCab(CAB_PADRAO); };
+$('cabSalvar').onclick = async () => {
+  try {
+    const r = await api('/pagina', {method: 'PUT', body: JSON.stringify({
+      titulo: $('cabTitulo').value, destaque: $('cabDestaque').value, subtitulo: $('cabSub').value})});
+    const site = {disparado: ' O site atualiza em uns 5 minutos.', desligado: ' Atenção: a atualização automática do site não está ligada; avise o Gabriel.', falhou: ' Mas o site não atualizou sozinho — avise o Gabriel.'}[r.site] || '';
+    $('msgCab').className = 'msgx ' + (r.site === 'disparado' ? 'ok' : 'info');
+    $('msgCab').textContent = 'Cabeçalho salvo.' + site;
+  } catch (e) { $('msgCab').className = 'msgx erro'; $('msgCab').textContent = e.message; }
+};
+
 // ── lista ────────────────────────────────────────────────────
 async function abrirLista() {
-  if (sujo && !confirm('Há alterações não salvas. Sair mesmo assim?')) return;
-  sujo = false;
-  $('vEditor').style.display = 'none'; $('vLista').style.display = 'block';
+  if (!mostrar('vLista')) return;
   const el = $('lista');
   el.innerHTML = '<div class="vazio">Carregando…</div>';
   const posts = await api('/posts');
@@ -340,11 +548,12 @@ function atualizarSlugPrev() {
 
 async function abrirEditor(id) {
   limparMsg();
-  $('vLista').style.display = 'none'; $('vEditor').style.display = 'block';
+  mostrar('vEditor');
   if (id) {
     atual = await api('/posts/' + id);
   } else {
-    atual = {status: 'rascunho', ja_publicado: false, titulo: '', resumo: '', categoria: 'estoque', autor: 'joao', capa_id: null, conteudo: '', slug: ''};
+    const autorPadrao = CAD.autores.some(a => a.chave === 'joao') ? 'joao' : (CAD.autores[0] || {}).chave;
+    atual = {status: 'rascunho', ja_publicado: false, titulo: '', resumo: '', categoria: (CAD.categorias[0] || {}).chave, autor: autorPadrao, capa_id: null, conteudo: '', slug: ''};
   }
   $('titulo').value = atual.titulo;
   $('resumo').value = atual.resumo; $('cnt').textContent = atual.resumo.length;
